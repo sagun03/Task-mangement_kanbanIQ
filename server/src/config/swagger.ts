@@ -10,7 +10,7 @@ const options: swaggerJsdoc.Options = {
       version: "1.0.0",
       description: "API for managing tasks",
     },
-    servers: [{ url: "http://localhost:5000" }],
+    servers: [{ url: "http://localhost:8080" }],
   },
   apis: ["./src/modules/*/*.ts"]
 };
