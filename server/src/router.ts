@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { tasksRoutes } from "./modules/tasks";
+import { authRoutes } from "./modules/auth";
 
 const router = Router();
 
@@ -9,5 +10,6 @@ router.get("/health-check", (req: Request, res: Response) => {
   });
 
 router.use('/tasks', tasksRoutes);
+router.use('/auth', authRoutes);
 
 export default router;
