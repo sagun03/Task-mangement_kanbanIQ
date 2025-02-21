@@ -1,6 +1,15 @@
 import { styled } from "@mui/system";
 import { Paper, TextField, Button } from "@mui/material";
 
+
+export const AuthCheckbox = () => {
+  // Checkbox implementation
+};
+
+export const AuthLink = () => {
+  // Link implementation
+};
+
 // Gradient Background with Glassmorphism
 export const AuthContainer = styled("div")({
   display: "flex",
