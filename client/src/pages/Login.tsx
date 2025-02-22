@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Divider,
   Checkbox,
@@ -9,9 +9,15 @@ import {
   IconButton,
   InputAdornment,
   Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeOff } from "react-icons/hi"; // Eye icons for password visibility
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../config/firebase"; // Assuming auth is exported from here
 import {
   Wrapper,
   Container,
@@ -37,17 +43,31 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const { login, loginWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false); // Modal state
+  const [resetEmail, setResetEmail] = useState(""); // Email for password reset
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormInputs>();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       await login(data.email, data.password);
+      navigate("/dashboard");
     } catch (err: unknown) {
       setError((err as Record<string, string>).message as string);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async () => {
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setError("Password reset email sent. Please check your inbox.");
+      setIsForgotPasswordOpen(false); // Close the modal after email is sent
+    } catch{
+      setError("Error sending reset email. Please try again.");
     }
   };
 
@@ -69,7 +89,7 @@ const Login: React.FC = () => {
 
           {error && <ErrorText>{error}</ErrorText>}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
             <Box
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
@@ -95,7 +115,7 @@ const Login: React.FC = () => {
               />
 
               <StyledTextField
-              placeholder="Password"
+                placeholder="Password"
                 fullWidth
                 type={showPassword ? "text" : "password"}
                 {...register("password", {
@@ -132,23 +152,59 @@ const Login: React.FC = () => {
             </Box>
             <FormActions>
               <FormControlLabel control={<Checkbox />} label="Remember me" />
-              <ForgotPasswordText as={Link} to="/forgot-password">
+              <ForgotPasswordText
+                onClick={() => setIsForgotPasswordOpen(true)} // Open the modal
+                style={{ cursor: "pointer" }}
+              >
                 Forgot password?
               </ForgotPasswordText>
             </FormActions>
 
-            <SubmitButton variant="contained" style={{ background: "black" }} type="submit">Login</SubmitButton>
+            <SubmitButton variant="contained" style={{ background: "black" }} type="submit">
+              Login
+            </SubmitButton>
           </form>
 
           <DividerText>Or continue with</DividerText>
 
           <OAuthButtons>
-            <OAuthButton variant="outlined"  onClick={loginWithGoogle}>
+            <OAuthButton variant="outlined" onClick={async () => { await loginWithGoogle(); navigate("/") }}>
               <FcGoogle size={22} /> Google
             </OAuthButton>
           </OAuthButtons>
         </FormBox>
       </Container>
+
+      {/* Modal for Forgot Password */}
+      <Dialog open={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)}>
+        <DialogTitle>Reset Password</DialogTitle>
+        <DialogContent>
+          <StyledTextField
+            fullWidth
+            placeholder="Enter your email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            error={!resetEmail}
+            helperText={!resetEmail ? "Email is required" : ""}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <i className="fa fa-envelope" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <SubmitButton
+            variant="contained"
+            style={{ background: "black" }}
+            onClick={handleForgotPasswordSubmit}
+          >
+            Send Reset Link
+          </SubmitButton>
+        </DialogActions>
+      </Dialog>
     </Wrapper>
   );
 };

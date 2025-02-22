@@ -26,7 +26,7 @@ const Navbar = () => {
               <Button color="inherit" component={Link} to="/dashboard">
                 Dashboard
               </Button>
-              <Button color="inherit" onClick={() => { logout(); navigate("/login"); }}>
+              <Button color="inherit" onClick={async () => { await logout(); navigate("/login"); }}>
                 Logout
               </Button>
             </>
