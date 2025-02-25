@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 interface IUser extends Document {
   userId: string;
-  username: string;
+  name?: string;
   email: string;
   originalBoardIds: string[];
   originalTasksId: string[];
@@ -11,7 +11,7 @@ interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>({
   userId: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
+  name: { type: String },
   email: { type: String, required: true },
   originalBoardIds: { type: [String], default: [] },
   originalTasksId: { type: [String], default: [] },

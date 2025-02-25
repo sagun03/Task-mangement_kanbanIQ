@@ -93,7 +93,7 @@ const OAuthButton = styled(Button)`
   gap: 8px;
   padding: 10px;
   width: 48%;
-  border: 2px solid red;
+  border: 2px solid #f0f0f0 !important;
   background: white;
   text-transform: none;
   &:hover {
