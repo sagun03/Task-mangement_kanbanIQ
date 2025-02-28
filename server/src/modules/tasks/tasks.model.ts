@@ -27,7 +27,23 @@ const TaskSchema = new Schema<ITask>(
     boardOriginalId: { type: String, required: true }
   },
   {
-    timestamps: { createdAt: true, updatedAt: true },
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: function (_doc, ret) {
+        ret.id = ret._id.toString(); // Add id field
+        delete ret._id; // Remove _id field
+        delete ret.__v; // Optional: Remove __v field
+      }
+    },
+    toObject: {
+      virtuals: true,
+      transform: function (_doc, ret) {
+        ret.id = ret._id.toString(); // Add id field
+        delete ret._id; // Remove _id field
+        delete ret.__v; // Optional: Remove __v field
+      }
+    }
   }
 );
 
