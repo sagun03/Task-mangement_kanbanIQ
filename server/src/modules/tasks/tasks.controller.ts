@@ -19,7 +19,33 @@ class TaskController {
     return TaskController.instance;
   }
 
+/**
+   * Get all tasks
+   */
+public async getTasks(req: Request, res: Response) {
+  try {
+    const tasks = await this.taskService.getAllTasks();
+    return res.status(200).json(tasks);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching tasks" });
+  }
+}
 
+/**
+ * Get a task by ID
+ */
+public async getTaskById(req: Request, res: Response) {
+  const { id } = req.params;
+  try {
+    const task = await this.taskService.getTaskById(id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    return res.status(200).json(task);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching task by ID" });
+  }
+}
   /**
    
 Create a new task*/
