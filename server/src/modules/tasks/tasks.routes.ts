@@ -4,6 +4,50 @@ import TaskController from "./tasks.controller";
 const router = express.Router();
 const taskController = TaskController.getInstance();
 
+
+// Get all tasks
+/**
+ * @swagger
+ * /tasks:
+ *   get:
+ *     summary: Get all tasks
+ *     description: Fetches all tasks from the database
+ *     responses:
+ *       200:
+ *         description: List of tasks
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/", async (req, res) => {
+  await taskController.getTasks(req, res);
+});
+
+// Get a task by ID
+/**
+ * @swagger
+ * /tasks/{id}:
+ *   get:
+ *     summary: Get a task by ID
+ *     description: Fetches a task by its unique ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: Task found
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:id", async (req, res) => {
+  await taskController.getTaskById(req, res);
+});
+
 // Create a new task
 /**
  
