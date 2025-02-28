@@ -1,41 +1,34 @@
 import { Request, Response } from "express";
-import { createNewTask, deleteTaskById, getAllTasks, updateExistingTask } from "./tasks.service";
+import TaskService from "./tasks.service";
 
-export const getTasks = async (req: Request, res: Response) => {
-  try {
-    const tasks = await getAllTasks();
-    res.json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch tasks" });
-  }
-};
+class TaskController {
+  // Private static instance property
+  private static instance: TaskController;
+  private taskService: TaskService;
 
-export const createTask = async (req: Request, res: Response) => {
-  try {
-    const { title, description, status } = req.body;
-    const task = await createNewTask(title, description, status);
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create task" });
+  // Private constructor to prevent instantiation
+  private constructor() {
+    this.taskService = new TaskService();
   }
-};
 
-export const updateTask = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updatedTask = await updateExistingTask(id, req.body);
-    res.json(updatedTask);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update task" });
+  // Get the Singleton instance of the controller
+  public static getInstance(): TaskController {
+    if (!TaskController.instance) {
+      TaskController.instance = new TaskController();
+    }
+    return TaskController.instance;
   }
-};
 
-export const deleteTask = async (req: Request, res: Response) => {
+
+  /**
+   
+Create a new task*/
+public async createTask(req: Request, res: Response) {
+  const taskData = req.body;
   try {
-    const { id } = req.params;
-    await deleteTaskById(id);
-    res.json({ message: "Task deleted" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete task" });
-  }
-};
+    const newTask = await this.taskService.createNewTask(taskData);
+    return res.status(201).json(newTask);} catch (error) {
+    return res.status(400).json({ message: "Invalid request body" });}}
+}
+
+export default TaskController;

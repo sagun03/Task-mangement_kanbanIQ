@@ -1,18 +1,15 @@
-import Task from "./tasks.model";
+import Task, { ITask } from "./tasks.model";
 
-export const getAllTasks = async () => {
-  return await Task.find();
-};
+class TaskService {
 
-export const createNewTask = async (title: string, description: string, status: string) => {
-  const task = new Task({ title, description, status });
-  return await task.save();
-};
+  /**
+   
+Create a new task in the database*/
+public async createNewTask(taskData: Partial<ITask>): Promise<ITask> {
+  try {
+    const task = new Task(taskData);
+    return await task.save();} catch (error: any) {
+    throw new Error("Error creating task: " + error.message);}}
+}
 
-export const updateExistingTask = async (id: string, updates: object) => {
-  return await Task.findByIdAndUpdate(id, updates, { new: true });
-};
-
-export const deleteTaskById = async (id: string) => {
-  return await Task.findByIdAndDelete(id);
-};
+export default TaskService;
