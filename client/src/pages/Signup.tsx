@@ -50,7 +50,7 @@ const Signup: React.FC = () => {
     }
     try {
       await signup(data.email, data.password, data.name);
-      navigate("/dashboard");
+      navigate("/login");
     } catch (err: unknown) {
       setError((err as Record<string, string>).message as string);
     }

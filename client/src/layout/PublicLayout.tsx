@@ -1,10 +1,12 @@
 import { Outlet } from "react-router-dom";
-import LandingPage from "../pages/Landing";
+import Navbar from "../components/Navbar";
 
 const PublicLayout = () => {
+  console.log("PublicLayout");
   return (
     <div>
-      <LandingPage/>
+      <Navbar />
+      <Outlet />
     </div>
   );
 };

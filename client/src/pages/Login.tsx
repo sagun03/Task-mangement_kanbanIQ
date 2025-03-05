@@ -168,7 +168,7 @@ const Login: React.FC = () => {
           <DividerText>Or continue with</DividerText>
 
           <OAuthButtons>
-            <OAuthButton variant="outlined" onClick={async () => { await loginWithGoogle(); navigate("/") }}>
+            <OAuthButton variant="outlined" onClick={async () => { await loginWithGoogle(); navigate("/dashboard") }}>
               <FcGoogle size={22} /> Google
             </OAuthButton>
           </OAuthButtons>

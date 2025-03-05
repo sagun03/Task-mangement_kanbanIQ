@@ -1,60 +1,14 @@
 import type React from "react"
-import { AppBar, Box, Button, Card, CardContent, Container, Grid, Toolbar, Typography } from "@mui/material"
+import { Box, Button, Card, CardContent, Container, Grid, Typography } from "@mui/material"
 import { MdPerson, MdDragIndicator } from "react-icons/md"
 import { FaDatabase, FaGithub, FaLayerGroup, FaLinkedin, FaTwitter } from "react-icons/fa"
-import { useNavigate } from "react-router-dom"
 
 const LandingPage: React.FC = () => {
 
-    const navStyle = { fontWeight: "600" }
     const iconStyle = { fontSize: "24px", marginRight: "8px" }
-    const navigate = useNavigate();
-    const toSignup = () => {
-        navigate("/signup");
-    }
-    const toLogin = () => {
-        navigate("/login");
-    }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      {/* Navigation Bar */}
-      <AppBar position="static" color="transparent" elevation={0}>
-        <Toolbar>
-          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
-            <Typography variant="h6" component="div" sx={{ fontWeight: "bold", display: "flex", alignItems: "center" }}>
-              <FaLayerGroup style={{ marginRight: "10px" }} />
-              KanbanIQ
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, flexGrow: 1, justifyContent: "center" }}>
-            <Button color="inherit" style={navStyle}>Features</Button>
-            <Button color="inherit" style={navStyle}>Demo</Button>
-            <Button color="inherit" style={navStyle}>Pricing</Button>
-            <Button color="inherit" style={navStyle}>Contact</Button>
-          </Box>
-
-          <Box>
-            <Button color="inherit" onClick={toLogin}>Login</Button>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{
-                backgroundColor: "black",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.8)",
-                },
-                borderRadius: 0,
-              }}
-              onClick={toSignup}
-            >
-              Sign Up
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
 
       {/* Hero Section */}
       <Container maxWidth="md" sx={{ textAlign: "center", mt: 8, mb: 8 }}>
