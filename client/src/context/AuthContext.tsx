@@ -4,7 +4,6 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   signInWithPopup, 
-  User, 
   sendPasswordResetEmail, 
   onAuthStateChanged
 } from "firebase/auth";
@@ -13,7 +12,7 @@ import api from "../config/axiosInstance";
 
 // Define context type
 interface AuthContextType {
-  user: any; // Updated to handle backend user object
+  user: Record<string, string> | null; // Updated to handle backend user object
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<void>;
@@ -26,8 +25,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null); // Backend user object
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<Record<string, string> | null>(
+    localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
+  );  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("user") ? true : false);
 
   const fetchUser = async (userId: string) => {
     try {
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string, name?: string) => {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await api.post("/auth/register", { email, userId: user.uid, name });
-    await fetchUser(user?.uid || "");
+    
   };
 
   // Logout
@@ -85,13 +85,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithGoogle = async () => {
     const { user } = await signInWithPopup(auth, googleProvider);
     try {
+      console.log("inside ltry catch")
       // Check if the user exists in the backend
       const response = await api.get(`/users/${user?.uid}`);
       if (!response.data) {
         // If user doesn't exist, register the user
-        await api.post("/auth/register", { email: user?.email, userId: user?.uid });
+        await api.post("/auth/register", { email: user?.email, userId: user?.uid, name: user?.displayName });
       }
-      console.log("User:", user);
       await fetchUser(user?.uid || "");
     } catch (error) {
       console.error("Error checking user:", error);

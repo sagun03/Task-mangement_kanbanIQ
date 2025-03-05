@@ -42,12 +42,12 @@ class AuthController {
 
   // Register user
   public async registerUser(req: Request, res: Response): Promise<void> {
-    const { userId, username, email, originalBoardIds = [], originalTasksId = [] } = req.body;
+    const { userId, name, email, originalBoardIds = [], originalTasksId = [] } = req.body;
 
     try {
       const newUser = await AuthService.registerUser({
         userId,
-        username,
+        name,
         email,
         originalBoardIds,
         originalTasksId,

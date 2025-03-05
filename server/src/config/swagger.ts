@@ -2,6 +2,8 @@ import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { Express } from "express";
 
+const baseURL = process.env.BASE_URL || 'http://localhost:8082';
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: "3.0.0",
@@ -10,7 +12,7 @@ const options: swaggerJsdoc.Options = {
       version: "1.0.0",
       description: "API for managing tasks",
     },
-    servers: [{ url: "http://localhost:8082/api" }],
+    servers: [{ url: `${baseURL}/api` }],
   },
   apis: ["./src/modules/*/*.ts"]
 };

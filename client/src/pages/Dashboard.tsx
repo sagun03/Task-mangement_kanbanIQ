@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
 import {
   Box,
   Typography,
@@ -42,6 +41,7 @@ import {
 import "@fontsource/open-sans/600.css";
 import { FaLayerGroup } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
+import api from "../config/axiosInstance";
 
 const drawerWidth = 280;
 
@@ -98,9 +98,13 @@ const TaskColumn = styled(Paper)(({ theme }) => ({
 }));
 
 interface Board {
-  _id: string;
+  id: string;
   name: string;
-  description: string;
+  adminId: string;
+  invitedUserIds: string[];
+  columnNames: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Task {
@@ -131,7 +135,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchBoards = async () => {
       try {
-        const response = await axios.get('http://localhost:8082/api/boards');
+        const response = await api.get('/boards');
         if (Array.isArray(response.data)) {
           setBoards(response.data);
         } else {
@@ -182,128 +186,10 @@ export default function Dashboard() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: "flex", bgcolor: "#f8fafa" }}>
-        {isSmallScreen ? (
-          <Drawer
-            variant="temporary"
-            open={drawerOpen}
-            onClose={toggleDrawer}
-            ModalProps={{ keepMounted: true }}
-          >
-            <Box sx={{ p: 2, width: drawerWidth }}>
-              <Typography sx={{ mb: 4, color: "#0e182b" }}>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <FaLayerGroup style={{ color: "#0e182b", fontSize: '26px' }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="KanbanIQ" 
-                    primaryTypographyProps={{ style: { fontSize: '26px' } }} 
-                  />
-                </ListItemButton>
-              </Typography>
-              <MuiList>
-                <ListItemButton selected>
-                  <ListItemIcon>
-                    <MdHome style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Dashboard" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdTimeline style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="My Boards" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdFormatListBulleted style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Tasks" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdGroups style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Team Collaboration" />
-                </ListItemButton>
-              </MuiList>
-            </Box>
-          </Drawer>
-        ) : (
-          <StyledDrawer variant="permanent">
-            <Box sx={{ p: 2 }}>
-              <Typography sx={{ mb: 4, color: "#0e182b" }}>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <FaLayerGroup style={{ color: "#0e182b", fontSize: '26px' }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="KanbanIQ" 
-                    primaryTypographyProps={{ style: { fontSize: '26px' } }} 
-                  />
-                </ListItemButton>
-              </Typography>
-              <MuiList>
-                <ListItemButton selected>
-                  <ListItemIcon>
-                    <MdHome style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Dashboard" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdTimeline style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="My Boards" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdFormatListBulleted style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Tasks" />
-                </ListItemButton>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MdGroups style={{ color: "#0e182b", fontSize: '24px' }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Team Collaboration" />
-                </ListItemButton>
-                <ListItemButton onClick={logout}>
-                <ListItemIcon><MdLogout style={{ color: "#0e182b", fontSize: '24px' }} /></ListItemIcon>
-                <ListItemText primary="Logout" />
-              </ListItemButton>
-              </MuiList>
-            </Box>
-          </StyledDrawer>
-        )}
 
         <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: "#f8fafa" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-            {isSmallScreen && (
-              <IconButton onClick={toggleDrawer}>
-                <MdMenu style={{ color: "#0e182b" }} />
-              </IconButton>
-            )}
-            <SearchBar>
-              <InputBase
-                sx={{ ml:1, flex: 1, color: "#0e182b" }}
-                placeholder="Search tasks, boards..."
-                inputProps={{ "aria-label": "search" }}
-              />
-              <IconButton type="button" aria-label="search">
-                <MdSearch style={{ color: "#0e182b" }} />
-              </IconButton>
-            </SearchBar>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <IconButton size="large">
-                <MdNotifications style={{ color: "#0e182b" }} />
-              </IconButton>
-              <Avatar style={{cursor: "pointer"}}>S</Avatar>
-            </Box>
-          </Box>
-
           <Typography variant="h4" sx={{ mb: 3, color: "#0e182b", textAlign: "left" }}>
-            Welcome back, {user?.email}!
+            Welcome back, {user?.name || user?.email}!
           </Typography>
 
           <Box sx={{ mb: 4, display: "flex", justifyContent: "flex-start", flexWrap: "wrap", gap: 2 }}>
@@ -333,21 +219,21 @@ export default function Dashboard() {
             <Typography color="error">{error}</Typography>
           ) : (
             <Grid container spacing={4} sx={{ mb: 4 }}>
-              {boards.map((board) => (
-                <Grid item xs={12} sm={6} md={2} key={board._id}>
-                  <BoardCard>
-                    <CardContent>
-                      <Typography variant="h6" sx={{ color: "#0e182b" }}>
-                        {board.name}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#0e182b" }}>
-                        {board}
-                      </Typography>
-                    </CardContent>
-                  </BoardCard>
-                </Grid>
-              ))}
-            </Grid>
+            {boards.map((board) => (
+              <Grid item xs={12} sm={6} md={4} key={board.id}>
+                <BoardCard>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: "#0e182b", fontWeight: "bold" }}>
+                      {board.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#0e182b" }}>
+                      Updated: {new Date(board.updatedAt).toLocaleString()}
+                    </Typography>
+                  </CardContent>
+                </BoardCard>
+              </Grid>
+            ))}
+          </Grid>
           )}
 
           <Grid container spacing={3} sx={{ mb: 4 }}>

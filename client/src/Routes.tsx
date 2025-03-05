@@ -8,9 +8,10 @@ import { useAuth } from "./context/AuthContext";
 import PrivateLayout from "./layout/PrivateLayout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Home from "./pages/Home";
 import PublicLayout from "./layout/PublicLayout";
 import AuthLayout from "./layout/AuthLayout";
+import LandingPage from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -23,7 +24,7 @@ const AppRoutes = () => {
           path="/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/" />
+              <Navigate to="/dashboard" />
             ) : (
               <AuthLayout>
                 <Login />
@@ -47,10 +48,18 @@ const AppRoutes = () => {
         {/* Private Routes */}
         <Route
           path="/"
-          element={isAuthenticated ? <PrivateLayout /> : <PublicLayout />}
+          element={<PublicLayout />}
         >
-          <Route index element={<Home />} />
+          <Route index element={<LandingPage />} />
         </Route>
+
+        <Route
+          path="/dashboard"
+          element={<PrivateLayout />}
+        >
+          <Route index element={<Dashboard />} />
+        </Route>
+
 
         {/* Redirect to Home if Route not found */}
         <Route path="*" element={<Navigate to="/" />} />
