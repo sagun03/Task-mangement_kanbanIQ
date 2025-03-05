@@ -5,14 +5,15 @@ import {
   signOut, 
   signInWithPopup, 
   User, 
-  sendPasswordResetEmail
+  sendPasswordResetEmail, 
+  onAuthStateChanged
 } from "firebase/auth";
 import { auth, googleProvider } from "../config/firebase";
 import api from "../config/axiosInstance";
 
 // Define context type
 interface AuthContextType {
-  user: User | null;
+  user: any; // Updated to handle backend user object
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name?: string) => Promise<void>;
@@ -25,32 +26,43 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null); // Backend user object
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      setUser(JSON.parse(user));
-      setIsAuthenticated(true);
-    }
-  }, [])
   const fetchUser = async (userId: string) => {
     try {
       const response = await api.get(`/users/${userId}`);
-      if (!response.data) {
-      localStorage.setItem("user", JSON.stringify(response.data));
-      setIsAuthenticated(true);
+      if (response.data) {
+        localStorage.setItem("user", JSON.stringify(response.data));
+        setUser(response.data);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error("User not found");
       }
     } catch (error) {
       console.error("Error fetching user:", error);
-      setIsAuthenticated(false)
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("user");
     }
-  }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await fetchUser(firebaseUser.uid);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem("user");
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Email & Password Login
   const login = async (email: string, password: string) => {
-    const { user } =  await signInWithEmailAndPassword(auth, email, password);
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
     await fetchUser(user?.uid || "");
   };
 
@@ -65,6 +77,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await signOut(auth);
     localStorage.removeItem("user");
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   // Google Login

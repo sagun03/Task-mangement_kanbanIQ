@@ -26,7 +26,7 @@ interface SignupFormInputs {
   email: string;
   password: string;
   confirmPassword: string;
-  name?: string;
+  name: string;
 }
 
 const Signup: React.FC = () => {

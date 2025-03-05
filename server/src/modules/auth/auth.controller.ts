@@ -41,7 +41,7 @@ class AuthController {
   }
 
   // Register user
-  public async registerUser(req: Request, res: Response): Promise<Response<any>> {
+  public async registerUser(req: Request, res: Response): Promise<void> {
     const { userId, username, email, originalBoardIds = [], originalTasksId = [] } = req.body;
 
     try {
@@ -53,10 +53,9 @@ class AuthController {
         originalTasksId,
       });
 
-      return res.status(201).json({ message: "User registered successfully", newUser });
+      res.status(201).json({ message: "User registered successfully", newUser });
     } catch (error) {
       AuthController.handleError(res, "Failed to register user", error);
-      return res.status(500).json({ error: "Internal Server Error" });
     }
   }
 }
