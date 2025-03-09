@@ -12,6 +12,10 @@ import PublicLayout from "./layout/PublicLayout";
 import AuthLayout from "./layout/AuthLayout";
 import LandingPage from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
+import CreateBoard from "./pages/Createboard";
+import Myboards from "./pages/Myboards";
+import Tasks from "./pages/Tasks";
+import MyTasks from "./pages/Mytasks";
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -53,16 +57,21 @@ const AppRoutes = () => {
           <Route index element={<LandingPage />} />
         </Route>
 
+        {/* Update the dashboard routes section */}
         <Route
           path="/dashboard"
           element={<PrivateLayout />}
         >
           <Route index element={<Dashboard />} />
+          <Route path="myboards" element={<Myboards />} />
+          
+          <Route path="tasks" element={<MyTasks />} />
+          
         </Route>
-
-
+        <Route path="/createtask" element={<Tasks />} />
+        <Route path="/createboard" element={<CreateBoard />} />
         {/* Redirect to Home if Route not found */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </Router>
   );

@@ -15,8 +15,8 @@ import {
   ListItemText,
   Paper,
 } from "@mui/material";
-import { styled } from "@mui/system";
-import { useNavigate } from "react-router-dom";
+import { color, fontWeight, styled } from "@mui/system";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaLayerGroup } from "react-icons/fa";
 import {
@@ -41,9 +41,28 @@ const StyledDrawer = styled(Drawer)({
   "& .MuiDrawer-paper": {
     width: drawerWidth,
     boxSizing: "border-box",
-    backgroundColor: "#f8fafa",
     boxShadow: "0px 0 6px -2px rgba(0, 0, 0, 0.1)",
   },
+});
+
+// Add new styled component for logo text
+const LogoText = styled(ListItemText)({
+  "& .MuiTypography-root": {
+    fontSize: "24px",
+    fontWeight: 700,
+    letterSpacing: "-0.5px",
+    fontFamily: "'Open Sans', sans-serif",
+  }
+});
+
+// Add new styled component for menu items
+const MenuItemText = styled(ListItemText)({
+  "& .MuiTypography-root": {
+    fontSize: "1rem",
+    color: "black",
+    letterSpacing: "0.2px",
+    fontFamily: "Open Sans, sans-serif",
+  }
 });
 
 const SearchBar = styled(Paper)(({ theme }) => ({
@@ -63,6 +82,8 @@ const SearchBar = styled(Paper)(({ theme }) => ({
 const Navbar = () => {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // Open & Close Dropdown
@@ -82,58 +103,120 @@ const Navbar = () => {
 
   const isHomePage = location.pathname === "/";
 
+  // Menu items with their paths
+  const menuItems = [
+    { text: 'Dashboard', icon: MdHome, path: '/dashboard' },
+    { text: 'My Boards', icon: MdTimeline, path: '/dashboard/myboards' },
+    { text: 'Tasks', icon: MdFormatListBulleted, path: '/dashboard/tasks' },
+    { text: 'Team Collaboration', icon: MdGroups, path: '/dashboard/team' },
+  ];
+
 console.log("isAuthenticated", isAuthenticated)
   return (
     <Box sx={{ display: "flex" }}>
       {/* Sidebar: Only show when authenticated */}
       {(isAuthenticated || !isHomePage) && (
         <StyledDrawer variant="permanent">
-          <Box sx={{ p: 2 }}>
-            <Typography sx={{ mb: 4, color: "#0e182b" }}>
-              <ListItemButton>
+          <Box sx={{ 
+            p: 2, 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column' 
+          }}>
+            {/* Logo section */}
+            <Box sx={{ mb: 4 }}>
+              <ListItemButton
+                sx={{
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(14, 24, 43, 0.04)',
+                  },
+                }}
+              >
                 <ListItemIcon>
                   <FaLayerGroup
-                    style={{ color: "#0e182b", fontSize: "26px" }}
+                    style={{ 
+                      color: "#0e182b", 
+                      fontSize: "24px"
+                    }}
                   />
                 </ListItemIcon>
-                <ListItemText
+                <LogoText
                   primary="KanbanIQ"
-                  primaryTypographyProps={{ style: { fontSize: "26px" } }}
                 />
               </ListItemButton>
-            </Typography>
-            <List>
-              <ListItemButton selected>
-                <ListItemIcon>
-                  <MdHome style={{ color: "#0e182b", fontSize: "24px" }} />
-                </ListItemIcon>
-                <ListItemText primary="Dashboard" />
-              </ListItemButton>
-              <ListItemButton>
-                <ListItemIcon>
-                  <MdTimeline style={{ color: "#0e182b", fontSize: "24px" }} />
-                </ListItemIcon>
-                <ListItemText primary="My Boards" />
-              </ListItemButton>
-              <ListItemButton>
-                <ListItemIcon>
-                  <MdFormatListBulleted
-                    style={{ color: "#0e182b", fontSize: "24px" }}
+            </Box>
+
+            {/* Menu items */}
+            <List sx={{ flex: 1 }}>
+              {menuItems.map((item) => (
+                <ListItemButton
+                  key={item.text}
+                  selected={currentPath === item.path}
+                  onClick={() => navigate(item.path)}
+                  sx={{
+                    borderRadius: 2,
+                    mb: 1,
+                    py: 1.2,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(14, 24, 43, 0.08)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(14, 24, 43, 0.12)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(14, 24, 43, 0.04)',
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <item.icon style={{ 
+                      color: "black",
+                      fontSize: "20px",
+                      opacity: currentPath === item.path ? 1 : 0.8
+                    }} />
+                  </ListItemIcon>
+                  <MenuItemText 
+                    primary={item.text}
+                    sx={{
+                      '& .MuiTypography-root': {
+                        color: "black",
+                        fontWeight: currentPath === item.path ? 700 : 600,
+                      }
+                    }}
                   />
-                </ListItemIcon>
-                <ListItemText primary="Tasks" />
-              </ListItemButton>
-              <ListItemButton>
+                </ListItemButton>
+              ))}
+            </List>
+
+            {/* Logout button at bottom */}
+            <List>
+              <ListItemButton 
+                onClick={handleLogout}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  },
+                }}
+              >
                 <ListItemIcon>
-                  <MdGroups style={{ color: "#0e182b", fontSize: "24px" }} />
+                  <MdLogout style={{ 
+                    color: "#ef4444", 
+                    fontSize: "20px",
+                    opacity: 0.9
+                  }} />
                 </ListItemIcon>
-                <ListItemText primary="Team Collaboration" />
-              </ListItemButton>
-              <ListItemButton onClick={handleLogout}>
-                <ListItemIcon>
-                  <MdLogout style={{ color: "#0e182b", fontSize: "24px" }} />
-                </ListItemIcon>
-                <ListItemText primary="Logout" />
+                <MenuItemText 
+                  primary="Logout"
+                  sx={{
+                    '& .MuiTypography-root': {
+                      color: "#ef4444",
+                      fontWeight: 500,
+                    }
+                  }}
+                />
               </ListItemButton>
             </List>
           </Box>

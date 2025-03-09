@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   signInWithPopup, 
+  User, 
   sendPasswordResetEmail, 
   onAuthStateChanged
 } from "firebase/auth";
@@ -12,10 +13,10 @@ import api from "../config/axiosInstance";
 
 // Define context type
 interface AuthContextType {
-  user: Record<string, string> | null; // Updated to handle backend user object
+  user: any; // Updated to handle backend user object
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<User>; // Changed return type to Promise<User>
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -25,9 +26,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<Record<string, string> | null>(
-    localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
-  );  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("user") ? true : false);
+  const [user, setUser] = useState<any>(null); // Backend user object
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const fetchUser = async (userId: string) => {
     try {
@@ -37,13 +37,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(response.data);
         setIsAuthenticated(true);
       } else {
-        throw new Error("User not found");
+        throw new Error("No user data received");
       }
     } catch (error) {
       console.error("Error fetching user:", error);
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem("user");
+      throw new Error("User not found");
     }
   };
 
@@ -68,9 +69,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Email & Password Signup
   const signup = async (email: string, password: string, name?: string) => {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    await api.post("/auth/register", { email, userId: user.uid, name });
-    
+    try {
+      // 1. Create Firebase user
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // 2. Register user in your backend
+      await api.post("/auth/register", { 
+        email, 
+        userId: firebaseUser.uid, 
+        name: name || email.split('@')[0] // Use name if provided, otherwise use email username
+      });
+  
+      // 3. Wait a brief moment to ensure backend registration is complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+  
+      // 4. Fetch the newly created user
+      await fetchUser(firebaseUser.uid);
+      
+      return firebaseUser;
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
   };
 
   // Logout
@@ -85,13 +105,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithGoogle = async () => {
     const { user } = await signInWithPopup(auth, googleProvider);
     try {
-      console.log("inside ltry catch")
       // Check if the user exists in the backend
       const response = await api.get(`/users/${user?.uid}`);
       if (!response.data) {
         // If user doesn't exist, register the user
-        await api.post("/auth/register", { email: user?.email, userId: user?.uid, name: user?.displayName });
+        await api.post("/auth/register", { email: user?.email, userId: user?.uid });
       }
+      console.log("User:", user);
       await fetchUser(user?.uid || "");
     } catch (error) {
       console.error("Error checking user:", error);

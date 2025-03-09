@@ -14,7 +14,6 @@ import {
   ListItemText,
   Paper,
   IconButton,
-  InputBase,
   Drawer,
   List as MuiList,
   ListItemIcon,
@@ -23,23 +22,15 @@ import {
   ThemeProvider,
   CssBaseline,
   useMediaQuery,
+  Chip,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
-  MdSearch,
   MdAdd,
-  MdHome,
-  MdFormatListBulleted,
-  MdTimeline,
-  MdGroups,
   MdNavigateNext,
   MdNavigateBefore,
-  MdMenu,
-  MdNotifications,
-  MdLogout,
 } from "react-icons/md";
 import "@fontsource/open-sans/600.css";
-import { FaLayerGroup } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/axiosInstance";
 
@@ -78,23 +69,50 @@ const SearchBar = styled(Paper)(({ theme }) => ({
 }));
 
 const BoardCard = styled(Card)({
-  height: 200,
+  height: "100%",
   display: "flex",
   flexDirection: "column",
   cursor: "pointer",
+  backgroundColor: "#ffffff",
+  transition: "all 0.2s ease-in-out",
+  border: "1px solid rgba(0,0,0,0.08)",
+  borderRadius: "12px",
+  boxShadow: "none",
   "&:hover": {
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-  },
+    transform: "translateY(-2px)",
+    boxShadow: "0 8px 16px rgba(0,0,0,0.06)",
+  }
 });
 
 const TaskColumn = styled(Paper)(({ theme }) => ({
   padding: 16,
-  backgroundColor: "#f8fafa",
   borderRadius: 8,
-  height: "100%",
+  height: "96%",
   [theme.breakpoints.down("sm")]: {
     marginBottom: theme.spacing(2),
   },
+}));
+
+const StyledButton = styled(Button)(({ variant }) => ({
+  textTransform: "none",
+  px: 3,
+  py: 1.5,
+  borderRadius: 2,
+  ...(variant === 'contained' ? {
+    backgroundColor: "#0e182b",
+    color: "white",
+    '&:hover': {
+      backgroundColor: "#1a2537",
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    }
+  } : {
+    color: "#0e182b",
+    borderColor: "#0e182b",
+    '&:hover': {
+      borderColor: "#0e182b",
+      backgroundColor: "rgba(14, 24, 43, 0.04)"
+    }
+  })
 }));
 
 interface Board {
@@ -107,12 +125,16 @@ interface Board {
   updatedAt: string;
 }
 
+// Update the Task interface
 interface Task {
   id: string;
   title: string;
+  description: string;
   status: string;
-  dueDate?: string;
-  progress?: number;
+  dueDate: string;
+  priority: string;
+  boardOriginalId: string;
+  createdBy: string;
 }
 
 interface ActivityItem {
@@ -130,14 +152,22 @@ export default function Dashboard() {
   const [error, setError] = useState<string>('');
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
-  const {user, logout} = useAuth();
+  const {user} = useAuth();
+  const [columns, setColumns] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState('');
 
   useEffect(() => {
     const fetchBoards = async () => {
       try {
         const response = await api.get('/boards');
         if (Array.isArray(response.data)) {
-          setBoards(response.data);
+          // Filter boards where adminId matches user's uid
+          const userBoards = response.data.filter(board => board.adminId === user?.userId);
+          setBoards(userBoards);
+          setColumns(userBoards.map(board => board.columnNames).flat());
+          console.log(boards,columns)
         } else {
           setError('Invalid response format');
         }
@@ -149,21 +179,31 @@ export default function Dashboard() {
       }
     };
 
-    fetchBoards();
-  }, []);
+    const fetchTasks = async () => {
+      try {
+        const response = await api.get('/tasks');
+        if (Array.isArray(response.data)) {
+          // Filter tasks created by the current user
+          const userTasks = response.data.filter(task => task.createdBy === user?.userId);
+          setTasks(userTasks);
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        setTasksError('Failed to fetch tasks');
+      } finally {
+        setTasksLoading(false);
+      }
+    };
+
+    if (user?.userId) {
+      fetchBoards();
+      fetchTasks();
+    }
+  }, [user?.userId]);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
   };
-
-  const tasks: Task[] = [
-    { id: "1", title: "Task 1 - Due Tomorrow", status: "pending-tasks", dueDate: "tomorrow" },
-    { id: "2", title: "Task 2 - Due in 3 days", status: "pending-tasks", dueDate: "3 days" },
-    { id: "3", title: "Task 3 - 50% Complete", status: "in-progress", progress: 50 },
-    { id: "4", title: "Task 4 - 75% Complete", status: "in-progress", progress: 75 },
-    { id: "5", title: "Task 5 - Completed", status: "completed" },
-    { id: "6", title: "Task 6 - Completed", status: "completed" },
-  ];
 
   const activities: ActivityItem[] = [
     {
@@ -181,32 +221,54 @@ export default function Dashboard() {
       timestamp: "5 hours ago",
     },
   ];
-  console.log(boards);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: "flex", bgcolor: "#f8fafa" }}>
 
         <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: "#f8fafa" }}>
-          <Typography variant="h4" sx={{ mb: 3, color: "#0e182b", textAlign: "left" }}>
+          <Typography sx={{ mb: 3,fontSize: "30px", fontWeight: "800", textAlign: "left" }}>
             Welcome back, {user?.name || user?.email}!
           </Typography>
 
           <Box sx={{ mb: 4, display: "flex", justifyContent: "flex-start", flexWrap: "wrap", gap: 2 }}>
             <Button
               variant="contained"
-              sx={{ backgroundColor: "#0e182b", textTransform: "none" }}
-              startIcon={<MdAdd style={{ color: "white" }} />}
+              sx={{ 
+                color: "#ffffff",
+                bgcolor: "#0e182b",
+                textTransform: "none",
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                "&:hover": { 
+                  bgcolor: "#1a2537",
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                }
+              }}
+              startIcon={<MdAdd />}
               onClick={() => navigate('/createboard')}
             >
-              Create New Board
+              Create Board
             </Button>
             <Button
-              variant="contained"
-              sx={{ backgroundColor: "#0e182b", textTransform: "none" }}
-              startIcon={<MdAdd style={{ color: "white" }} />}
+              variant="outlined"
+              sx={{ 
+                color: "#0e182b",
+                borderColor: "#0e182b",
+                textTransform: "none",
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                "&:hover": { 
+                  borderColor: "#0e182b",
+                  bgcolor: "rgba(14, 24, 43, 0.04)" 
+                }
+              }}
+              startIcon={<MdAdd />}
+              onClick={() => navigate('/createtask')}
             >
-              Add New Task
+              Add Task
             </Button>
           </Box>
 
@@ -217,41 +279,145 @@ export default function Dashboard() {
             <Typography>Loading boards...</Typography>
           ) : error ? (
             <Typography color="error">{error}</Typography>
+          ) : boards.length === 0 ? (
+            <Grid container justifyContent="center">
+              <Grid item xs={12} md={6}>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 2,
+                    py: 4,
+                    px: 3,
+                    bgcolor: 'white',
+                    borderRadius: 2,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    mb: 4,
+                    textAlign: 'center'
+                  }}
+                >
+                  <Typography variant="h6" sx={{ color: "#666" }}>
+                    No boards found
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#888" }}>
+                    Create a new board to get started with your projects
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
           ) : (
             <Grid container spacing={4} sx={{ mb: 4 }}>
-            {boards.map((board) => (
-              <Grid item xs={12} sm={6} md={4} key={board.id}>
-                <BoardCard>
-                  <CardContent>
-                    <Typography variant="h6" sx={{ color: "#0e182b", fontWeight: "bold" }}>
-                      {board.name}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#0e182b" }}>
-                      Updated: {new Date(board.updatedAt).toLocaleString()}
-                    </Typography>
-                  </CardContent>
-                </BoardCard>
-              </Grid>
-            ))}
-          </Grid>
+              {boards.map((board) => (
+                <Grid item xs={12} sm={6} md={4} key={board.id}>
+                  <BoardCard>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ color: "#0e182b", fontWeight: "bold" }}>
+                        {board.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "#0e182b" }}>
+                        Created At: {new Date(board.createdAt).toDateString()}
+                      </Typography>
+                    </CardContent>
+                  </BoardCard>
+                </Grid>
+              ))}
+            </Grid>
           )}
 
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {["Pending tasks", "In Progress", "Completed"].map((status, index) => (
-              <Grid item xs={12} sm={6} md={3.6} key={index}>
+            {['To Do', 'In Progress', 'Done'].map((status) => (
+              <Grid item xs={12} sm={6} md={3.6} key={status}>
                 <TaskColumn>
-                  <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
-                    {status}
-                  </Typography>
-                  {tasks
-                    .filter((t) => t.status === status.toLowerCase().replace(" ", "-"))
-                    .map((task) => (
-                      <Card key={task.id} sx={{ mb: 1 }}>
-                        <CardContent>
-                          <Typography sx={{ color: "#0e182b" }}>{task.title}</Typography>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    mb: 2,
+                    pb: 2,
+                    borderBottom: '1px solid rgba(0,0,0,0.1)'
+                  }}>
+                    <Typography variant="h6" sx={{ 
+                      color: "#0e182b",
+                      fontWeight: 600
+                    }}>
+                      {status}
+                    </Typography>
+                    <Typography variant="caption" sx={{ 
+                      color: "#666666",
+                      bgcolor: 'rgba(0,0,0,0.05)',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1
+                    }}>
+                      {tasks.filter(task => task.status === status).length}
+                    </Typography>
+                  </Box>
+                  {tasksLoading ? (
+                    <Typography sx={{ color: "#666666", textAlign: "center", py: 2 }}>
+                      Loading tasks...
+                    </Typography>
+                  ) : tasksError ? (
+                    <Typography color="error" sx={{ textAlign: "center", py: 2 }}>
+                      {tasksError}
+                    </Typography>
+                  ) : (
+                    <Box sx={{ minHeight: 200 }}>
+                      {tasks
+                        .filter(task => task.status === status)
+                        .map(task => (
+                          <Card 
+                            key={task.id} 
+                            sx={{ 
+                              mb: 2,
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              boxShadow: 'none',
+                              '&:hover': {
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
+                              }
+                            }}
+                          >
+                            <CardContent sx={{ p: 2 }}>
+                              <Typography sx={{ 
+                                color: "#0e182b",
+                                fontWeight: 500,
+                                mb: 1
+                              }}>
+                                {task.title}
+                              </Typography>
+                              <Box sx={{ 
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}>
+                                <Typography variant="caption" sx={{ color: "#666666" }}>
+                                  Due: {new Date(task.dueDate).toLocaleDateString()}
+                                </Typography>
+                                <Box sx={{ 
+                                  display: 'flex',
+                                  gap: 1
+                                }}>
+                                  <Chip
+                                    label={task.priority}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: task.priority === 'high' ? '#fee2e2' :
+                                             task.priority === 'medium' ? '#fef3c7' :
+                                             '#ecfdf5',
+                                      color: task.priority === 'high' ? '#dc2626' :
+                                            task.priority === 'medium' ? '#d97706' :
+                                            '#059669',
+                                      fontWeight: 500,
+                                      fontSize: '0.75rem'
+                                    }}
+                                  />
+                                </Box>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </Box>
+                  )}
                 </TaskColumn>
               </Grid>
             ))}
