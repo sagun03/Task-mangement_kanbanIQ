@@ -1,8 +1,7 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+// tasks.model.ts
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface ITask extends Document {
-  _id: Types.ObjectId; // Explicitly define _id type
-  id?: string; // Optional, since it's generated dynamically
   title: string;
   description?: string;
   priority: "high" | "medium" | "low";
@@ -12,6 +11,8 @@ export interface ITask extends Document {
   status: "To Do" | "In Progress" | "Done";
   createdBy: string;
   boardOriginalId: string;
+  comments: { text: string; commentedBy: string; createdAt: Date }[];
+  reminders: { reminderDate: Date; sent: boolean }[];
 }
 
 const TaskSchema = new Schema<ITask>(
@@ -24,31 +25,26 @@ const TaskSchema = new Schema<ITask>(
     assignedBy: { type: String, required: true },
     status: { type: String, enum: ["To Do", "In Progress", "Done"], default: "To Do" },
     createdBy: { type: String, required: true },
-    boardOriginalId: { type: String, required: true }
+    boardOriginalId: { type: String, required: true },
+    comments: [
+      {
+        text: String,
+        commentedBy: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    reminders: [
+      {
+        reminderDate: Date,
+        sent: { type: Boolean, default: false },
+      },
+    ],
   },
   {
     timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform: function (_doc, ret) {
-        ret.id = ret._id.toString(); // Add id field
-        delete ret._id; // Remove _id field
-        delete ret.__v; // Optional: Remove __v field
-      }
-    },
-    toObject: {
-      virtuals: true,
-      transform: function (_doc, ret) {
-        ret.id = ret._id.toString(); // Add id field
-        delete ret._id; // Remove _id field
-        delete ret.__v; // Optional: Remove __v field
-      }
-    }
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-TaskSchema.pre("save", function preSave() {
-  this.id = this._id.toString();
-});
-const Task = mongoose.model<ITask>("tasks", TaskSchema);
-export default Task;
+export default mongoose.model<ITask>("Task", TaskSchema);

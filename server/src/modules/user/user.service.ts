@@ -57,4 +57,13 @@ export class UserService {
       throw new Error(`Error removing board from user: ${error.message}`);
     }
   }
+
+  public async getUserById(userId: string) {
+    try {
+      const user = await User.findById(userId); 
+      return user;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch user by ID: ${error.message}`);
+    }
+  }
 }
