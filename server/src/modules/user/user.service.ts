@@ -10,6 +10,15 @@ export class UserService {
     }
   }
 
+  public static async getOtherUsers(excludeUserId: string) {
+    try {
+      const users = await User.find({ _id: { $ne: excludeUserId } });
+      return users;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch users: ${error.message}`);
+    }
+  }
+
   public async addTaskToUser(userId: string, taskId: string) {
     try {
       await User.findOneAndUpdate(

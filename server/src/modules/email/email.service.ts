@@ -13,13 +13,14 @@ class EmailService {
     });
   }
 
-  async sendEmail(to: string, subject: string, text: string) {
+  async sendEmail(to: string, subject: string, text: string, html?: string) {
     try {
       await this.transporter.sendMail({
         from: process.env.EMAIL_USER,
         to,
         subject,
         text,
+        html
       });
       console.log(`Email sent to ${to}`);
     } catch (error) {

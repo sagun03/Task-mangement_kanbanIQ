@@ -50,6 +50,16 @@ class UserController {
       // Ensure that there's no code after this
     }
   }
+
+  public async getOtherUsers(req: Request, res: Response) {
+    try {
+      const { id } = req.params; // Requesting user’s ID
+      const users = await UserService.getOtherUsers(id);
+      return res.status(200).json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      UserController.handleError(res, "Failed to fetch users", error, 500);    }
+  }
 }
 
 export default UserController;
