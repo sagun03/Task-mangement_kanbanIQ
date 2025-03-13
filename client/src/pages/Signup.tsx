@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import {
   Wrapper,
@@ -20,7 +21,10 @@ import {
   StyledTextField,
   SubmitButton,
 } from "../styles/signup";
+import EmailIcon from "@mui/icons-material/Email";
 import { HiEye, HiEyeOff } from "react-icons/hi";
+import { useToast } from "../context/ToastProvider";
+import PersonIcon from "@mui/icons-material/Person";
 
 interface SignupFormInputs {
   email: string;
@@ -31,6 +35,7 @@ interface SignupFormInputs {
 
 const Signup: React.FC = () => {
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,18 +46,25 @@ const Signup: React.FC = () => {
     formState: { errors },
   } = useForm<SignupFormInputs>();
   const navigate = useNavigate();
-
+  const { showToast } = useToast();
 
   const onSubmit = async (data: SignupFormInputs) => {
     if (data.password !== data.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
+
+    setLoading(true);
+    setError("");
+
     try {
       await signup(data.email, data.password, data.name);
+      showToast("Signup successful! Redirecting...", "success");
       navigate("/login");
     } catch (err: unknown) {
-      setError((err as Record<string, string>).message as string);
+      showToast((err as Record<string, string>).message || "Signup failed. Please try again.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,12 +73,7 @@ const Signup: React.FC = () => {
       <Container>
         <FormBox>
           <TabContainer>
-           
-            <Tab
-              as={Link}
-              to="/login"
-              style={{ textDecoration: "none", color: "black" }}
-            >
+            <Tab as={Link} to="/login" style={{ textDecoration: "none", color: "black" }}>
               Login
             </Tab>
             <Tab active>Sign Up</Tab>
@@ -75,118 +82,109 @@ const Signup: React.FC = () => {
 
           {error && <ErrorText>{error}</ErrorText>}
 
-          <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%"}} >
-          <Box
-              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-            >
-            <StyledTextField
-            placeholder="Email"
-              fullWidth
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^\S+@\S+\.\S+$/,
-                  message: "Invalid email format",
-                },
-              })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="fa fa-envelope" />
-                  </InputAdornment>
-                ),
-              }}
-            />
+          <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
+            <Box style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <StyledTextField
+                placeholder="Email"
+                fullWidth
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Invalid email format",
+                  },
+                })}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-            <StyledTextField
-              fullWidth
-              placeholder="Name"
-              {...register("name")}
-              error={!!errors.name}
-              helperText={errors.name?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="fa fa-user" />
-                  </InputAdornment>
-                ),
-              }}
-            />
+              <StyledTextField
+                fullWidth
+                placeholder="Name"
+                {...register("name")}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-            <StyledTextField
-              fullWidth
-              placeholder="Password"
-              type={showPassword ? "text" : "password"}
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
-                },
-                pattern: {
-                  value: /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
-                  message:
-                    "Password must contain at least one uppercase letter, one number, and one special character",
-                },
-              })}
-              error={!!errors.password}
-              helperText={errors.password?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="fa fa-lock" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <HiEyeOff /> : <HiEye />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+              <StyledTextField
+                fullWidth
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                  pattern: {
+                    value: /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
+                    message: "Must have 1 uppercase, 1 number, 1 special character",
+                  },
+                })}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <i className="fa fa-lock" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <HiEyeOff /> : <HiEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-            <StyledTextField
-              fullWidth
-              placeholder="Confirm Password"
-              type={showConfirmPassword ? "text" : "password"}
-              {...register("confirmPassword", {
-                required: "Confirm Password is required",
-                validate: (value) =>
-                  value === watch("password") || "Passwords do not match",
-              })}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword?.message}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="fa fa-lock" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? <HiEyeOff /> : <HiEye />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-            <FormControlLabel
-              control={<Checkbox />}
-              style={{ margin: "10px" }}
-              label="I agree to the Terms & Conditions"
-            />
+              <StyledTextField
+                fullWidth
+                placeholder="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
+                {...register("confirmPassword", {
+                  required: "Confirm Password is required",
+                  validate: (value) => value === watch("password") || "Passwords do not match",
+                })}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <i className="fa fa-lock" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                        {showConfirmPassword ? <HiEyeOff /> : <HiEye />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
 
-            <SubmitButton variant="contained" style={{ background: "black" }} type="submit">Sign Up</SubmitButton>
+            <FormControlLabel control={<Checkbox />} style={{ margin: "10px" }} label="I agree to the Terms & Conditions" />
+
+            <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
+              {loading ? <CircularProgress size={24} style={{ color: "white" }} /> : "Sign Up"}
+            </SubmitButton>
           </form>
         </FormBox>
       </Container>

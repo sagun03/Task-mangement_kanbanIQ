@@ -26,8 +26,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null); // Backend user object
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(
+    localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
+  );  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem("user") ? true : false);
 
   const fetchUser = async (userId: string) => {
     try {
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        if (!user)
         await fetchUser(firebaseUser.uid);
       } else {
         setUser(null);
@@ -63,8 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Email & Password Login
   const login = async (email: string, password: string) => {
+    try {
     const { user } = await signInWithEmailAndPassword(auth, email, password);
     await fetchUser(user?.uid || "");
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   // Email & Password Signup
@@ -115,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchUser(user?.uid || "");
     } catch (error) {
       console.error("Error checking user:", error);
+      throw error;
     }
   };
 

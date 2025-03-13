@@ -8,7 +8,6 @@ import Navbar from "../components/Navbar";
 
 const PrivateLayout = () => {
   const { isAuthenticated } = useAuth();
-  console.log("isAuthenticated", isAuthenticated)
   return isAuthenticated ? (
     <div>
       {/* Suspense wrapper for lazy-loaded components */}

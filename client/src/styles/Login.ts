@@ -48,6 +48,7 @@ const ErrorText = styled(Typography)`
 
 const StyledTextField = styled(TextField)`
   margin-top: 10px;
+  background: #ffff;
 `;
 
 const FormActions = styled.div`

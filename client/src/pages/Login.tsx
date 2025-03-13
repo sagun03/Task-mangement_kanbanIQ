@@ -13,18 +13,21 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  CircularProgress,
 } from "@mui/material";
 import { FcGoogle } from "react-icons/fc";
-import { HiEye, HiEyeOff } from "react-icons/hi"; // Eye icons for password visibility
+import { HiEye, HiEyeOff } from "react-icons/hi";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../config/firebase"; // Assuming auth is exported from here
+import { auth } from "../config/firebase";
+import EmailIcon from '@mui/icons-material/Email';
+import CloseIcon from '@mui/icons-material/Close';
+import PasswordIcon from '@mui/icons-material/Password';
 import {
   Wrapper,
   Container,
   FormBox,
   TabContainer,
   Tab,
-  ErrorText,
   StyledTextField,
   FormActions,
   ForgotPasswordText,
@@ -33,6 +36,8 @@ import {
   OAuthButtons,
   OAuthButton,
 } from "../styles/login";
+import { useToast } from "../context/ToastProvider";
+import { IoCloseCircleOutline } from "react-icons/io5";
 
 interface LoginFormInputs {
   email: string;
@@ -40,11 +45,12 @@ interface LoginFormInputs {
 }
 
 const Login: React.FC = () => {
-  const [error, setError] = useState("");
   const { login, loginWithGoogle } = useAuth();
+  const { showToast } = useToast(); // Fetch the toast function
   const [showPassword, setShowPassword] = useState(false);
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false); // Modal state
-  const [resetEmail, setResetEmail] = useState(""); // Email for password reset
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [loading, setLoading] = useState(false); // State for loader
   const {
     register,
     handleSubmit,
@@ -54,20 +60,25 @@ const Login: React.FC = () => {
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
+      setLoading(true);
       await login(data.email, data.password);
+      showToast("Login successful!", "success");
       navigate("/dashboard");
     } catch (err: unknown) {
-      setError((err as Record<string, string>).message as string);
+      const errorMsg = (err as Record<string, string>).message as string;
+      showToast(errorMsg, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleForgotPasswordSubmit = async () => {
     try {
       await sendPasswordResetEmail(auth, resetEmail);
-      setError("Password reset email sent. Please check your inbox.");
-      setIsForgotPasswordOpen(false); // Close the modal after email is sent
-    } catch{
-      setError("Error sending reset email. Please try again.");
+      showToast("Password reset email sent. Check your inbox.", "success");
+      setIsForgotPasswordOpen(false);
+    } catch {
+      showToast("Error sending reset email. Please try again.", "error");
     }
   };
 
@@ -87,12 +98,8 @@ const Login: React.FC = () => {
           </TabContainer>
           <Divider style={{ width: "100%" }} />
 
-          {error && <ErrorText>{error}</ErrorText>}
-
           <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
-            <Box
-              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-            >
+            <Box style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <StyledTextField
                 fullWidth
                 placeholder="Email"
@@ -108,8 +115,8 @@ const Login: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <i className="fa fa-envelope" />
-                    </InputAdornment>
+                    <EmailIcon color="action" />
+                  </InputAdornment>
                   ),
                 }}
               />
@@ -135,14 +142,12 @@ const Login: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <i className="fa fa-lock" />
+                     <PasswordIcon color="action" />
                     </InputAdornment>
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
+                      <IconButton onClick={() => setShowPassword(!showPassword)}>
                         {showPassword ? <HiEyeOff /> : <HiEye />}
                       </IconButton>
                     </InputAdornment>
@@ -153,22 +158,36 @@ const Login: React.FC = () => {
             <FormActions>
               <FormControlLabel control={<Checkbox />} label="Remember me" />
               <ForgotPasswordText
-                onClick={() => setIsForgotPasswordOpen(true)} // Open the modal
+                onClick={() => setIsForgotPasswordOpen(true)}
                 style={{ cursor: "pointer" }}
               >
                 Forgot password?
               </ForgotPasswordText>
             </FormActions>
 
-            <SubmitButton variant="contained" style={{ background: "black" }} type="submit">
-              Login
+            <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
+              {loading ? <CircularProgress size={24} style={{ color: "white" }} /> : "Login"}
             </SubmitButton>
           </form>
 
           <DividerText>Or continue with</DividerText>
 
           <OAuthButtons>
-            <OAuthButton variant="outlined" onClick={async () => { await loginWithGoogle(); navigate("/dashboard") }}>
+            <OAuthButton
+              variant="outlined"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  await loginWithGoogle();
+                  showToast("Login successful!", "success");
+                  navigate("/dashboard");
+                } catch (error) {
+                  showToast(error?.message || "Login failed. Please try again.", "error");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
               <FcGoogle size={22} /> Google
             </OAuthButton>
           </OAuthButtons>
@@ -177,8 +196,13 @@ const Login: React.FC = () => {
 
       {/* Modal for Forgot Password */}
       <Dialog open={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)}>
-        <DialogTitle>Reset Password</DialogTitle>
-        <DialogContent>
+         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        Reset Password
+        <IconButton onClick={() => setIsForgotPasswordOpen(false)} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ pb: 2 }}>
           <StyledTextField
             fullWidth
             placeholder="Enter your email"
@@ -189,8 +213,8 @@ const Login: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <i className="fa fa-envelope" />
-                </InputAdornment>
+                <EmailIcon color="action" />
+              </InputAdornment>
               ),
             }}
           />
