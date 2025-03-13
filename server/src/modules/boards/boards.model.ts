@@ -6,6 +6,7 @@ export interface IBoard extends Document {
   name: string;
   adminId: string;
   invitedUserIds: string[];
+  acceptedUserIds?: string[];
   columnNames: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -16,6 +17,7 @@ const BoardSchema = new Schema<IBoard>(
     name: { type: String, required: true },
     adminId: { type: String, required: true },
     invitedUserIds: { type: [String], default: [] },
+    acceptedUserIds: { type: [String], default: [] }, 
     columnNames: { type: [String], default: ["To Do", "In Progress", "Done"] },
   },
   {

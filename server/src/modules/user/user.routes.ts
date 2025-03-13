@@ -54,4 +54,43 @@ router.get("/:firebaseUserId", async (req, res) => {
   await userController.getUserByFirebaseId(req, res);
 });
 
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     description: Fetches all users from MongoDB.
+ *     responses:
+ *       200:
+ *         description: Users retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   userId:
+ *                     type: string
+ *                   username:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   avatar:
+ *                     type: string
+ *       500:
+ *         description: Internal Server Error.
+ */
+router.get("/getOtherUsers/:id", async (req, res) => {
+  try {
+    await userController.getOtherUsers(req, res);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 export default router;

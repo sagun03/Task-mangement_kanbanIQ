@@ -5,6 +5,7 @@ import { theme } from "./theme";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import AppRoutes from "./Routes";
+import { ToastProvider } from "./context/ToastProvider";
 
 function App() {
   return (
@@ -12,7 +13,9 @@ function App() {
       <StyledThemeProvider theme={{ primaryColor: "#1976d2" }}>
         <CssBaseline />
         <AuthProvider>
-          <AppRoutes />
+          <ToastProvider>
+            <AppRoutes />
+          </ToastProvider>
         </AuthProvider>
       </StyledThemeProvider>
     </ThemeProvider>

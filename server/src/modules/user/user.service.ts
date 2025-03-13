@@ -10,6 +10,15 @@ export class UserService {
     }
   }
 
+  public static async getOtherUsers(excludeUserId: string) {
+    try {
+      const users = await User.find({ _id: { $ne: excludeUserId } });
+      return users;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch users: ${error.message}`);
+    }
+  }
+
   public async addTaskToUser(userId: string, taskId: string) {
     try {
       await User.findOneAndUpdate(
@@ -55,6 +64,15 @@ export class UserService {
       );
     } catch (error: any) {
       throw new Error(`Error removing board from user: ${error.message}`);
+    }
+  }
+
+  public async getUserById(userId: string) {
+    try {
+      const user = await User.findById(userId); 
+      return user;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch user by ID: ${error.message}`);
     }
   }
 }

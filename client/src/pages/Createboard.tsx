@@ -1,147 +1,163 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
   Card,
-  CardContent,
   Container,
-  FormControl,
-  FormControlLabel,
-  Grid,
   IconButton,
-  Paper,
-  Radio,
-  RadioGroup,
   TextField,
   Typography,
-  styled,
-  MenuItem,
-  Select,
-  SelectChangeEvent
-} from '@mui/material';
-import { 
-  MdLock, 
-  MdPublic, 
-  MdFileUpload,
-  MdArrowBack,
-} from 'react-icons/md';
+  Autocomplete,
+  Avatar,
+} from "@mui/material";
+import { MdArrowBack } from "react-icons/md";
 import "@fontsource/open-sans/700.css";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import api from '../config/axiosInstance'; // Add this import at the top
-// Styled components
-const CoverOption = styled(Paper)(({ theme }) => ({
-  width: '100%',
-  height: 80,
-  cursor: 'pointer',
-  border: '2px solid transparent',
-  transition: 'border-color 0.3s ease',
-  '&:hover': {
-    borderColor: theme.palette.primary.main,
-  },
-  '&.selected': {
-    borderColor: theme.palette.primary.main,
-  }
-}));
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import api from "../config/axiosInstance"; // Add this import at the top
+import styled from "styled-components";
+import { useToast } from "../context/ToastProvider";
+import LoadingOverlay from "../components/Loader";
 
-const AvatarCircle = styled(Box)(({ theme }) => ({
-  width: 32,
-  height: 32,
-  borderRadius: '50%',
-  backgroundColor: theme.palette.grey[300],
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: theme.spacing(0.5),
-  color: theme.palette.text.secondary,
-  fontSize: 12,
-  fontWeight: 'bold',
-}));
+const AvatarContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+`;
+
+const MoreUsersBadge = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-left: 4px;
+`;
 
 interface CreateBoardProps {
   onSubmit?: (boardData: any) => void;
 }
 
 const CreateBoard: React.FC<CreateBoardProps> = () => {
-  const [boardName, setBoardName] = useState('');
-  const [description, setDescription] = useState('');
-  const [privacy, setPrivacy] = useState('public');
-  const [selectedCover, setSelectedCover] = useState(0);
-  const [email, setEmail] = useState('');
-  const [teamMembers, setTeamMembers] = useState<string[]>(['John', 'Jane']);
-  
-  const {user} = useAuth();
+  const [boardName, setBoardName] = useState("");
+  const [description, setDescription] = useState("");
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
-  // Cover options with different shades of gray
-  const coverOptions = [
-    '#1e2533', // Dark blue-gray
-    '#2c3444', // Medium blue-gray
-    '#474f61', // Medium gray
-    '#737888', // Light gray
-  ];
-
-  const handleAddTeamMember = () => {
-    if (email && !teamMembers.includes(email)) {
-      setTeamMembers([...teamMembers, email]);
-      setEmail('');
+  useEffect(() => {
+    if (user?.id) {
+      api
+        .get(`/users/getOtherUsers/${user?.id}`)
+        .then((response) => setUsers(response.data))
+        .catch((error) => console.error("Error fetching users:", error));
     }
+  }, [user?.id]);
+
+  const handleUserChange = (event, newValue) => {
+    setSelectedUsers(newValue);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!boardName.trim()) {
-      alert('Board name is required');
+      alert("Board name is required");
       return;
     }
 
     try {
+      setLoading(true); // Show loader
+
       const boardData = {
         name: boardName,
         adminId: user?.userId,
-        invitedUserIds: [], // Empty array for now
-        columnNames: ['To-do', 'In-progress', 'Complete']
+        invitedUserIds: selectedUsers.map((user) => user.id),
+        columnNames: ["To-do", "In-progress", "Complete"],
       };
 
-      const response = await api.post('/boards', boardData);
-      console.log('Board created:', response.data);
-      
+      const response = await api.post("/boards", boardData);
+      console.log("Board created:", response.data);
+
+      showToast("Board created successfully!", "success");
+
       // Redirect to dashboard after successful creation
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error creating board:', error);
-      alert('Failed to create board. Please try again.');
+      console.error("Error creating board:", error);
+      showToast("Failed to create board. Please try again.", "error");
+    } finally {
+      setLoading(false); // Hide loader
     }
   };
- 
+
   const navigate = useNavigate();
   return (
-    <Container maxWidth="lg">
-      {/* Back Button */}
-      <Box sx={{ mt: 2, mb: 2, display: 'flex', alignItems: 'center' }}>
-        <IconButton 
-          onClick={() => navigate('/dashboard')}
-          sx={{ color: '#0e182b', mr: 1 }}
-        >
-          <MdArrowBack />
-        </IconButton>
-        <Typography variant="h6" sx={{ color: '#0e182b' }}>
-          Back to Dashboard
-        </Typography>
-      </Box>
-
-      <Card sx={{ p: 4, boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)', borderRadius: 2 }}>
-        <form onSubmit={handleSubmit}>
-          <Typography fontWeight="bold" gutterBottom sx={{fontSize: "25px", fontFamily: 'Open Sans', textAlign: "left", marginBottom: 3 }}>
-            Create New Board
+    <>
+    <div style={{ background: "#f8fafa", minHeight: "100vh" }}>
+      <Container maxWidth="md">
+        {/* Back Button */}
+        <Box sx={{ mt: 2, mb: 2, display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={() => navigate("/dashboard")}
+            sx={{ color: "#0e182b", mr: 1 }}
+          >
+            <MdArrowBack />
+          </IconButton>
+          <Typography variant="h6" sx={{ color: "#0e182b" }}>
+            Back to Dashboard
           </Typography>
+        </Box>
 
-          <Grid container spacing={4}>
+        <Card
+          sx={{
+            p: 4,
+            boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
+            borderRadius: 2,
+          }}
+        >
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              flexDirection: "column",
+              margin: "20px auto",
+              maxWidth: "750px",
+            }}
+          >
+            <Typography
+              fontWeight="bold"
+              gutterBottom
+              sx={{
+                fontSize: "25px",
+                fontFamily: "Open Sans",
+                textAlign: "left",
+                marginBottom: 3,
+              }}
+            >
+              Create New Board
+            </Typography>
+            {/* 
+            <Grid container spacing={4}> */}
             {/* Left Column */}
-            <Grid item xs={12} md={6}>
+            <Box display="flex" justifyContent="center" flexDirection="column">
               {/* Board Name */}
               <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: 'Open Sans', textAlign: "left" }}>
+                <Typography
+                  variant="body1"
+                  fontWeight="bold"
+                  mb={1}
+                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
+                >
                   Board Name
                 </Typography>
                 <TextField
@@ -151,16 +167,16 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
                   value={boardName}
                   onChange={(e) => setBoardName(e.target.value)}
                   sx={{
-                    backgroundColor: 'white',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#ced4da',
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#ced4da",
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'black',
+                      "&:hover fieldset": {
+                        borderColor: "black",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'black',
+                      "&.Mui-focused fieldset": {
+                        borderColor: "black",
                       },
                     },
                   }}
@@ -169,7 +185,12 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
 
               {/* Description */}
               <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: 'Open Sans', textAlign: "left" }}>
+                <Typography
+                  variant="body1"
+                  fontWeight="bold"
+                  mb={1}
+                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
+                >
                   Description
                 </Typography>
                 <TextField
@@ -181,161 +202,79 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   sx={{
-                    backgroundColor: 'white',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#ced4da',
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#ced4da",
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'black',
+                      "&:hover fieldset": {
+                        borderColor: "black",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'black',
+                      "&.Mui-focused fieldset": {
+                        borderColor: "black",
                       },
                     },
                   }}
                 />
               </Box>
 
-              {/* Privacy Settings */}
-              <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: 'Open Sans', textAlign: "left" }}>
-                  Privacy Settings
-                </Typography>
-                <FormControl component="fieldset" fullWidth sx={{ textAlign: 'left' }}>
-                  <RadioGroup
-                    value={privacy}
-                    onChange={(e) => setPrivacy(e.target.value)}
-                  >
-                    <Box sx={{ mb: 1, p: 1.5, border: '1px solid #ced4da', borderRadius: 1 }}>
-                      <FormControlLabel
-                        value="public"
-                        control={<Radio sx={{ color: 'black', '&.Mui-checked': { color: 'black' } }} />}
-                        label={
-                          <Box display="flex" alignItems="center">
-                            <MdPublic style={{ marginRight: 8 }} />
-                            <Box>
-                              <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'Open Sans' }}>Public</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Anyone with the link can view
-                              </Typography>
-                            </Box>
-                          </Box>
-                        }
-                      />
-                    </Box>
-                    <Box sx={{ p: 1.5, border: '1px solid #ced4da', borderRadius: 1 }}>
-                      <FormControlLabel
-                        value="private"
-                        control={<Radio sx={{ color: 'black', '&.Mui-checked': { color: 'black' } }} />}
-                        label={
-                          <Box display="flex" alignItems="center">
-                            <MdLock style={{ marginRight: 8 }} />
-                            <Box>
-                              <Typography variant="body1" fontWeight="bold" sx={{ fontFamily: 'Open Sans' }}>Private</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Only invited members can access
-                              </Typography>
-                            </Box>
-                          </Box>
-                        }
-                      />
-                    </Box>
-                  </RadioGroup>
-                </FormControl>
-              </Box>
-
-              
-            </Grid>
-
-            {/* Right Column */}
-            <Grid item xs={12} md={6}>
-              {/* Board Cover */}
-              <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: 'Open Sans', textAlign: "left" }}>
-                  Board Cover
-                </Typography>
-                <Grid container spacing={1} mb={2}>
-                  {coverOptions.map((color, index) => (
-                    <Grid item xs={3} key={index}>
-                      <CoverOption
-                        className={selectedCover === index ? 'selected' : ''}
-                        onClick={() => setSelectedCover(index)}
-                        sx={{ backgroundColor: color }}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<MdFileUpload />}
-                  sx={{ textTransform: 'none', color: 'black', borderColor: 'black', '&:hover': { borderColor: 'black', backgroundColor: '#f5f5f5' } }}
-                >
-                  Upload Custom Cover
-                </Button>
-              </Box>
-
               {/* Invite Team Members */}
-              <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: 'Open Sans', textAlign: "left" }}>
-                  Invite Team Members
-                </Typography>
-                <Box display="flex" mb={2}>
-                  <TextField
-                    fullWidth
-                    placeholder="Enter email address"
-                    variant="outlined"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    sx={{
-                      backgroundColor: 'white',
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: '#ced4da',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'black',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'black',
-                        },
-                      },
-                    }}
+              <div>
+                <h4>Invite Team Members</h4>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
+                  <Autocomplete
+                    multiple
+                    options={users}
+                    getOptionLabel={(option) => option.email}
+                    value={selectedUsers}
+                    onChange={handleUserChange}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Enter email address" />
+                    )}
+                    style={{ flex: 1 }}
                   />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAddTeamMember}
-                    sx={{ ml: 1, textTransform: 'none', minWidth: 80, backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
-                  >
-                    Invite
-                  </Button>
-                </Box>
-                
-              </Box>
+                </div>
+
+                {/* Avatars Preview */}
+                <AvatarContainer>
+                  {selectedUsers.slice(0, 3).map((user, index) => (
+                    <Avatar
+                      key={index}
+                      src={user.avatar || "https://via.placeholder.com/32"}
+                      alt={user.name}
+                      style={{ width: 32, height: 32, marginRight: 4 }}
+                    />
+                  ))}
+                  {selectedUsers.length > 3 && (
+                    <MoreUsersBadge>+{selectedUsers.length - 3}</MoreUsersBadge>
+                  )}
+                </AvatarContainer>
+              </div>
 
               {/* Action Buttons */}
-              <Box display="flex" gap={4} mt={4}>
-                
+              <Box display="flex" gap={4} mt={4} justifyContent="center">
                 <Button
                   variant="contained"
                   type="submit"
-                  sx={{ 
-                    textTransform: 'none', 
-                    backgroundColor: 'black', 
-                    color: 'white',
-                    '&:hover': { backgroundColor: '#333' }
+                  sx={{
+                    textTransform: "none",
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": { backgroundColor: "#333" },
                   }}
                 >
                   Create Board
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
-        </form>
-      </Card>
-    </Container>
+            </Box>
+          </form>
+        </Card>
+      </Container>
+    </div>
+    <LoadingOverlay loading={loading} />
+    </>
   );
 };
 

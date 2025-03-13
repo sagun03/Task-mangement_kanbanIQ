@@ -1,3 +1,5 @@
+import BoardInvitationService from "../boardInvitation/boardInvitation.service";
+import EmailService from "../email/email.service";
 import { UserService } from "../user/user.service";
 import Board, { IBoard } from "./boards.model";
 
@@ -24,25 +26,36 @@ class BoardService {
    */
   public async getBoardById(id: string): Promise<IBoard | null> {
     try {
-      return await Board.findById(id);
+      const board = await Board.findById(id);
+      if (!board) {
+        throw new Error("Board not found");
+      }
+      return board;
     } catch (error: any) {
       throw new Error("Error fetching board by ID: " + error.message);
     }
   }
 
   /**
-   * ✅ Create a new board and assign the admin and invited users
+   * ✅ Create a new board and send invitations to the users
    */
   public async createNewBoard(boardData: Partial<IBoard>): Promise<IBoard> {
     try {
       const board = new Board(boardData);
       const savedBoard = await board.save();
 
-      // 🔥 Call UserService to assign the board to the admin and invited users
+      // 🔥 Call UserService to assign the board to the admin
       await this.userService.addBoardToUser(savedBoard.adminId, savedBoard.id);
-      
+
+      // Lazy load BoardInvitationService
+      const { default: BoardInvitationService } = await import(
+        "../boardInvitation/boardInvitation.service"
+      );
+      const boardInvitationService = new BoardInvitationService();
+      // Send invitations to invited users
       for (const userId of savedBoard.invitedUserIds) {
-        await this.userService.addBoardToUser(userId, savedBoard.id);
+        // Delegate invitation logic to BoardInvitationService
+        await boardInvitationService.createInvitation(savedBoard.id, userId);
       }
 
       return savedBoard;
@@ -70,7 +83,7 @@ class BoardService {
    */
   public async getBoardsByIds(ids: string[]): Promise<IBoard[]> {
     try {
-      return await Board.find({ 'id': { $in: ids } });
+      return await Board.find({ _id: { $in: ids } });
     } catch (error: any) {
       throw new Error("Error fetching boards by IDs: " + error.message);
     }
@@ -95,6 +108,21 @@ class BoardService {
       return deletedBoard;
     } catch (error: any) {
       throw new Error("Error deleting board: " + error.message);
+    }
+  }
+
+  /**
+   * Get the admin ID of a board by its ID
+   */
+  public async getAdminIdByBoardId(boardId: string): Promise<string | null> {
+    try {
+      const board = await Board.findOne({ _id: boardId });
+      if (board) {
+        return board.adminId;
+      }
+      return null;
+    } catch (error: any) {
+      throw new Error("Error fetching admin ID: " + error.message);
     }
   }
 }
