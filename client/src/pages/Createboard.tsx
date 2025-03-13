@@ -12,18 +12,19 @@ import {
   Avatar,
 } from "@mui/material";
 import { MdArrowBack } from "react-icons/md";
-import "@fontsource/open-sans/700.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../config/axiosInstance"; // Add this import at the top
+import api from "../config/axiosInstance";
 import styled from "styled-components";
 import { useToast } from "../context/ToastProvider";
 import LoadingOverlay from "../components/Loader";
+import { useForm, Controller } from "react-hook-form";
 
 const AvatarContainer = styled.div`
   display: flex;
   align-items: center;
   margin-top: 8px;
+  gap: 4px;
 `;
 
 const MoreUsersBadge = styled.div`
@@ -40,144 +41,110 @@ const MoreUsersBadge = styled.div`
   margin-left: 4px;
 `;
 
-interface CreateBoardProps {
-  onSubmit?: (boardData: any) => void;
-}
-
-const CreateBoard: React.FC<CreateBoardProps> = () => {
-  const [boardName, setBoardName] = useState("");
-  const [description, setDescription] = useState("");
+const CreateBoard: React.FC = () => {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm();
 
   useEffect(() => {
     if (user?.id) {
       api
-        .get(`/users/getOtherUsers/${user?.id}`)
-        .then((response) => setUsers(response.data))
-        .catch((error) => console.error("Error fetching users:", error));
+      .get(`/users/getOtherUsers/${user?.id}`)
+      .then((response) => {
+        setUsers(response.data)
+      })
+      .catch((error) => {
+        console.error("Error fetching users:", error)
+        showToast('Error fetching Email addressess', "error");
+      })
     }
   }, [user?.id]);
 
-  const handleUserChange = (event, newValue) => {
-    setSelectedUsers(newValue);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!boardName.trim()) {
-      alert("Board name is required");
-      return;
-    }
-
+  const onSubmit = async (data: any) => {
     try {
-      setLoading(true); // Show loader
+      setLoading(true);
 
       const boardData = {
-        name: boardName,
+        name: data.boardName,
+        description: data.description,
         adminId: user?.userId,
-        invitedUserIds: selectedUsers.map((user) => user.id),
-        columnNames: ["To-do", "In-progress", "Complete"],
+        invitedUserIds: selectedUsers.map((user) => user?.id),
+        columnNames: ["To-Do", "In-Progress", "Complete"],
       };
 
       const response = await api.post("/boards", boardData);
       console.log("Board created:", response.data);
 
       showToast("Board created successfully!", "success");
-
-      // Redirect to dashboard after successful creation
       navigate("/dashboard");
     } catch (error) {
       console.error("Error creating board:", error);
       showToast("Failed to create board. Please try again.", "error");
     } finally {
-      setLoading(false); // Hide loader
+      setLoading(false);
     }
   };
 
-  const navigate = useNavigate();
   return (
     <>
-    <div style={{ background: "#f8fafa", minHeight: "100vh" }}>
-      <Container maxWidth="md">
-        {/* Back Button */}
-        <Box sx={{ mt: 2, mb: 2, display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={() => navigate("/dashboard")}
-            sx={{ color: "#0e182b", mr: 1 }}
-          >
-            <MdArrowBack />
-          </IconButton>
-          <Typography variant="h6" sx={{ color: "#0e182b" }}>
-            Back to Dashboard
-          </Typography>
-        </Box>
+      <div style={{ background: "#f8fafa", minHeight: "100vh" }}>
+        <Container maxWidth="md">
+          {/* Back Button */}
+          <Box sx={{ mt: 2, mb: 2, display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={() => navigate("/dashboard")}
+              sx={{ color: "#0e182b", mr: 1 }}
+            >
+              <MdArrowBack />
+            </IconButton>
+            <Typography variant="h6" sx={{ color: "#0e182b" }}>
+              Back to Dashboard
+            </Typography>
+          </Box>
 
-        <Card
-          sx={{
-            p: 4,
-            boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
-            borderRadius: 2,
-          }}
-        >
-          <form
-            onSubmit={handleSubmit}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              flexDirection: "column",
-              margin: "20px auto",
-              maxWidth: "750px",
-            }}
-          >
-            <Typography
-              fontWeight="bold"
-              gutterBottom
-              sx={{
-                fontSize: "25px",
-                fontFamily: "Open Sans",
-                textAlign: "left",
-                marginBottom: 3,
+          <Card sx={{ p: 4, boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)", borderRadius: 2 }}>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                margin: "20px auto",
+                maxWidth: "750px",
               }}
             >
-              Create New Board
-            </Typography>
-            {/* 
-            <Grid container spacing={4}> */}
-            {/* Left Column */}
-            <Box display="flex" justifyContent="center" flexDirection="column">
+              <Typography fontWeight="bold" gutterBottom sx={{ fontSize: "25px", fontFamily: "Open Sans", textAlign: "left", marginBottom: 3 }}>
+                Create New Board
+              </Typography>
+
               {/* Board Name */}
               <Box mb={3}>
-                <Typography
-                  variant="body1"
-                  fontWeight="bold"
-                  mb={1}
-                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
-                >
+                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: "Open Sans", textAlign: "left" }}>
                   Board Name
                 </Typography>
                 <TextField
                   fullWidth
                   placeholder="Enter board name"
                   variant="outlined"
-                  value={boardName}
-                  onChange={(e) => setBoardName(e.target.value)}
+                  {...register("boardName", { required: "Board name is required" })}
+                  error={!!errors.boardName}
+                  helperText={errors.boardName?.message}
                   sx={{
                     backgroundColor: "white",
                     "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#ced4da",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "black",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "black",
-                      },
+                      "& fieldset": { borderColor: "#ced4da" },
+                      "&:hover fieldset": { borderColor: "black" },
+                      "&.Mui-focused fieldset": { borderColor: "black" },
                     },
                   }}
                 />
@@ -185,12 +152,7 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
 
               {/* Description */}
               <Box mb={3}>
-                <Typography
-                  variant="body1"
-                  fontWeight="bold"
-                  mb={1}
-                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
-                >
+                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: "Open Sans", textAlign: "left" }}>
                   Description
                 </Typography>
                 <TextField
@@ -199,20 +161,16 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
                   multiline
                   rows={3}
                   variant="outlined"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  
+                  {...register("description", { required: "Description is required" })}
+                  error={!!errors.description}
+                  helperText={errors.description?.message}
                   sx={{
                     backgroundColor: "white",
                     "& .MuiOutlinedInput-root": {
-                      "& fieldset": {
-                        borderColor: "#ced4da",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "black",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "black",
-                      },
+                      "& fieldset": { borderColor: "#ced4da" },
+                      "&:hover fieldset": { borderColor: "black" },
+                      "&.Mui-focused fieldset": { borderColor: "black" },
                     },
                   }}
                 />
@@ -221,59 +179,57 @@ const CreateBoard: React.FC<CreateBoardProps> = () => {
               {/* Invite Team Members */}
               <div>
                 <h4>Invite Team Members</h4>
-                <div
-                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
-                >
-                  <Autocomplete
-                    multiple
-                    options={users}
-                    getOptionLabel={(option) => option.email}
-                    value={selectedUsers}
-                    onChange={handleUserChange}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Enter email address" />
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <Controller
+                    name="selectedUsers"
+                    control={control}
+                    render={({ field }) => (
+                      <Autocomplete
+                        multiple
+                        options={users}
+                        getOptionLabel={(option) => option.email}
+                        value={selectedUsers}
+                        onChange={(event, newValue) => {
+                          field.onChange(newValue);
+                          setSelectedUsers(newValue);
+                        }}
+                        renderInput={(params) => <TextField {...params} label="Enter email address" />}
+                        sx={{
+                          flex: 1,
+                          backgroundColor: "white",
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": { borderColor: "#ced4da" },
+                            "&:hover fieldset": { borderColor: "black" },
+                            "&.Mui-focused fieldset": { borderColor: "black" },
+                          }
+                        }}
+                      />
                     )}
-                    style={{ flex: 1 }}
                   />
                 </div>
 
                 {/* Avatars Preview */}
                 <AvatarContainer>
-                  {selectedUsers.slice(0, 3).map((user, index) => (
-                    <Avatar
-                      key={index}
-                      src={user.avatar || "https://via.placeholder.com/32"}
-                      alt={user.name}
-                      style={{ width: 32, height: 32, marginRight: 4 }}
-                    />
+                  {selectedUsers?.slice(0, 3).map((user, index) => (
+                    <Avatar key={index} src={user?.name || "https://via.placeholder.com/32"} alt={user?.name}>
+                      {user?.email[0]?.toUpperCase()}
+                    </Avatar>
                   ))}
-                  {selectedUsers.length > 3 && (
-                    <MoreUsersBadge>+{selectedUsers.length - 3}</MoreUsersBadge>
-                  )}
+                  {selectedUsers.length > 3 && <MoreUsersBadge>+{selectedUsers.length - 3}</MoreUsersBadge>}
                 </AvatarContainer>
               </div>
 
               {/* Action Buttons */}
               <Box display="flex" gap={4} mt={4} justifyContent="center">
-                <Button
-                  variant="contained"
-                  type="submit"
-                  sx={{
-                    textTransform: "none",
-                    backgroundColor: "black",
-                    color: "white",
-                    "&:hover": { backgroundColor: "#333" },
-                  }}
-                >
-                  Create Board
+                <Button variant="contained" type="submit" sx={{ textTransform: "none", backgroundColor: "black", color: "white", "&:hover": { backgroundColor: "#333" } }}>
+                Create Board
                 </Button>
               </Box>
-            </Box>
-          </form>
-        </Card>
-      </Container>
-    </div>
-    <LoadingOverlay loading={loading} />
+            </form>
+          </Card>
+        </Container>
+        <LoadingOverlay loading={loading} />
+      </div>
     </>
   );
 };

@@ -37,7 +37,7 @@ import {
   OAuthButton,
 } from "../styles/login";
 import { useToast } from "../context/ToastProvider";
-import { IoCloseCircleOutline } from "react-icons/io5";
+import LoadingOverlay from "../components/Loader";
 
 interface LoginFormInputs {
   email: string;
@@ -166,7 +166,7 @@ const Login: React.FC = () => {
             </FormActions>
 
             <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
-              {loading ? <CircularProgress size={24} style={{ color: "white" }} /> : "Login"}
+            Login
             </SubmitButton>
           </form>
 
@@ -229,6 +229,7 @@ const Login: React.FC = () => {
           </SubmitButton>
         </DialogActions>
       </Dialog>
+      <LoadingOverlay loading={loading} />
     </Wrapper>
   );
 };

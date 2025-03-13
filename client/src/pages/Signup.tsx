@@ -25,6 +25,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useToast } from "../context/ToastProvider";
 import PersonIcon from "@mui/icons-material/Person";
+import LoadingOverlay from "../components/Loader";
 
 interface SignupFormInputs {
   email: string;
@@ -183,11 +184,12 @@ const Signup: React.FC = () => {
             <FormControlLabel control={<Checkbox />} style={{ margin: "10px" }} label="I agree to the Terms & Conditions" />
 
             <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
-              {loading ? <CircularProgress size={24} style={{ color: "white" }} /> : "Sign Up"}
+            Sign Up
             </SubmitButton>
           </form>
         </FormBox>
       </Container>
+      <LoadingOverlay loading={loading} />
     </Wrapper>
   );
 };
