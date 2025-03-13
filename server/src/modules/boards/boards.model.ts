@@ -5,6 +5,7 @@ export interface IBoard extends Document {
   id?: string;
   name: string;
   adminId: string;
+  description: { type: String },
   invitedUserIds: string[];
   acceptedUserIds?: string[];
   columnNames: string[];
@@ -16,6 +17,7 @@ const BoardSchema = new Schema<IBoard>(
   {
     name: { type: String, required: true },
     adminId: { type: String, required: true },
+    description: { type: String },
     invitedUserIds: { type: [String], default: [] },
     acceptedUserIds: { type: [String], default: [] }, 
     columnNames: { type: [String], default: ["To Do", "In Progress", "Done"] },
@@ -27,7 +29,7 @@ const BoardSchema = new Schema<IBoard>(
       transform: function (_doc, ret) {
         ret.id = ret._id.toString();
         delete ret._id;
-        delete ret.__v;
+        delete ret.v;
       }
     },
     toObject: {
@@ -35,7 +37,7 @@ const BoardSchema = new Schema<IBoard>(
       transform: function (_doc, ret) {
         ret.id = ret._id.toString();
         delete ret._id;
-        delete ret.__v;
+        delete ret.v;
       }
     }
   }
