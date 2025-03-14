@@ -4,7 +4,8 @@ import { Snackbar, Alert, Slide, AlertTitle } from "@mui/material";
 interface ToastContextType {
   showToast: (
     message: string,
-    type?: "success" | "error" | "info" | "warning"
+    type?: "success" | "error" | "info" | "warning" | "",
+    title?: string
   ) => void;
 }
 
@@ -15,13 +16,15 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     message: "",
     type: "success",
     open: false,
+    title: "",
   });
 
   const showToast = (
     message: string,
-    type: "success" | "error" | "info" | "warning" = "success"
+    type: "success" | "error" | "info" | "warning" = "success",
+    title: string = ""
   ) => {
-    setToast({ message, type, open: true });
+    setToast({ message, type, open: true, title });
   };
 
   const handleClose = () => {
@@ -40,7 +43,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
       >
         <Alert onClose={handleClose} variant="filled" sx={{ borderRadius: 4 }} severity={toast.type}>
           <AlertTitle sx={{textAlign: "left"}}>
-            {toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
+            {toast.title ? toast.title : toast.type.charAt(0).toUpperCase() + toast.type.slice(1)}
           </AlertTitle>
 
           {toast.message}
