@@ -114,6 +114,39 @@ class TaskController {
       return res.status(500).json({ message: "Error deleting task" });
     }
   }
+
+  /**
+ * Partially update a task
+ */
+public async partialUpdateTask(req: Request, res: Response) {
+  const { id } = req.params;
+  const updates = req.body;
+  try {
+    const updatedTask = await this.taskService.updateTaskFields(id, updates);
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    return res.status(200).json(updatedTask);
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating task" });
+  }
+}
+
+/**
+ * Get tasks by board ID
+ */
+public async getTasksByBoardId(req: Request, res: Response) {
+  const { boardId } = req.params;
+  try {
+    const tasks = await this.taskService.getTasksByBoardId(boardId);
+    if (!tasks.length) {
+      return res.status(404).json({ message: "No tasks found for this board" });
+    }
+    return res.status(200).json(tasks);
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching tasks by board ID" });
+  }
+}
 }
 
 export default TaskController;

@@ -245,6 +245,31 @@ class TaskService {
       throw new Error("Error sending deadline reminder: " + error.message);
     }
   }
+
+  /**
+   * Partially updates task fields
+   */
+  public async updateTaskFields(
+    id: string,
+    updates: Partial<ITask>
+  ): Promise<ITask | null> {
+    try {
+      return await Task.findByIdAndUpdate(id, updates, { new: true });
+    } catch (error: any) {
+      throw new Error("Error updating task fields: " + error.message);
+    }
+  }
+
+  /**
+   * Get tasks by board ID
+   */
+  public async getTasksByBoardId(boardId: string): Promise<ITask[]> {
+    try {
+      return await Task.find({ boardOriginalId: boardId });
+    } catch (error: any) {
+      throw new Error("Error fetching tasks by board ID: " + error.message);
+    }
+  }
 }
 
 export default TaskService;
