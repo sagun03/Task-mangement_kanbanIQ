@@ -16,6 +16,7 @@ import CreateBoard from "./pages/Createboard";
 import Myboards from "./pages/Myboards";
 import Tasks from "./pages/Tasks";
 import MyTasks from "./pages/Mytasks";
+import KanbanBoard from "./pages/KanbanBoard";
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -70,6 +71,11 @@ const AppRoutes = () => {
         </Route>
         <Route path="/createtask" element={<Tasks />} />
         <Route path="/createboard" element={<CreateBoard />} />
+
+        <Route path="/kanban-board/:boardId" element={<PrivateLayout />} >
+        <Route index element={<KanbanBoard />} />
+        </Route>
+
         {/* Redirect to Home if Route not found */}
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
