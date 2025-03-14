@@ -224,4 +224,74 @@ router.post("/fetchByIds", async (req, res) => {
   await taskController.getTasksByIds(req, res);
 });
 
+/**
+ * @swagger
+ * /tasks/fetchByBoardId/{boardId}:
+ *   get:
+ *     summary: Get tasks by board ID
+ *     description: Fetches all tasks associated with a given board ID
+ *     tags: [Tasks]
+ *     parameters:
+ *       - in: path
+ *         name: boardId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Board ID
+ *     responses:
+ *       200:
+ *         description: List of tasks
+ *       404:
+ *         description: No tasks found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/fetchByBoardId/:boardId", async (req, res) => {
+  await taskController.getTasksByBoardId(req, res);
+});
+
+// Partially update a task
+/**
+ * @swagger
+ * /tasks/{id}:
+ *   patch:
+ *     summary: Partially update a task
+ *     description: Updates specific fields of a task
+ *     tags: [Tasks]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [To Do, In Progress, Done]
+ *                 example: "In Progress"
+ *               priority:
+ *                 type: string
+ *                 enum: [high, medium, low]
+ *                 example: "medium"
+ *     responses:
+ *       200:
+ *         description: Task updated successfully
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/:id", async (req, res) => {
+  console.log("in here in patch")
+  await taskController.partialUpdateTask(req, res);
+});
+
+
 export default router;
