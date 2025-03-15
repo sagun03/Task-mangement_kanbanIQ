@@ -72,7 +72,7 @@ const AppRoutes = () => {
         <Route path="/createtask" element={<Tasks />} />
         <Route path="/createboard" element={<CreateBoard />} />
 
-        <Route path="/kanban-board/:boardId" element={<PrivateLayout />} >
+        <Route path="/kanban-board/:boardId" element={<PrivateLayout isSideBar={false} />} >
         <Route index element={<KanbanBoard />} />
         </Route>
 

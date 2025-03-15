@@ -129,3 +129,4 @@ export const updateBoard = async (boardId: string, data: Partial<IBoard>): Promi
     return null;
   }
 };
+

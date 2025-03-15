@@ -330,7 +330,7 @@ export default function Dashboard() {
             <Grid container spacing={4} sx={{ mb: 4 }}>
               {boards.map((board) => (
                 <Grid item xs={12} sm={6} md={4} key={board.id}>
-                  <BoardCard>
+                  <BoardCard onClick={() => navigate(`/kanban-board/${board.id}`)}>
                     <CardContent>
                       <Typography
                         variant="h6"

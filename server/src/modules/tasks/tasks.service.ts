@@ -103,9 +103,11 @@ class TaskService {
     updates: Partial<ITask>
   ): Promise<ITask | null> {
     try {
+      console.log("Updates: ", updates, id);
       const updatedTask = await Task.findByIdAndUpdate(id, updates, {
         new: true,
       });
+      console.log("Updated task: ", updatedTask);
 
       if (updatedTask) {
         const assignedUser = await this.userService.getUserById(
@@ -154,6 +156,7 @@ class TaskService {
 
       return updatedTask;
     } catch (error: any) {
+      console.log("Error updating task: ", error);
       throw new Error("Error updating task: " + error.message);
     }
   }
@@ -265,7 +268,24 @@ class TaskService {
    */
   public async getTasksByBoardId(boardId: string): Promise<ITask[]> {
     try {
-      return await Task.find({ boardOriginalId: boardId });
+      const tasks = await Task.find({ boardOriginalId: boardId }).lean(); // Converts documents to plain objects
+      console.log("Tasks: ", tasks);
+      const updatedTasks: ITask[] = await Promise.all(
+        tasks.map(async (task) => {
+          const assignedToUser = task.assignedTo ? await this.userService.getUserById(task.assignedTo) : null;
+          const assignedByUser = task.assignedBy ? await this.userService.getUserById(task.assignedBy) : null;
+          const createdByUser = task.createdBy ? await this.userService.getUserById(task.createdBy) : null;
+  
+          return {
+            ...task,
+            assignedToEmail: assignedToUser?.email ?? undefined, // Ensure undefined instead of null
+            assignedByEmail: assignedByUser?.email ?? undefined,
+            createdByEmail: createdByUser?.email ?? undefined,
+          };
+        })
+      );
+  
+      return updatedTasks;
     } catch (error: any) {
       throw new Error("Error fetching tasks by board ID: " + error.message);
     }

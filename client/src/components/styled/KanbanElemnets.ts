@@ -6,7 +6,7 @@ export const BoardContainer = styled.div`
   height: 100%;
   min-height: calc(100vh - 64px);
   padding: 16px;
-  background-color: #f5f7fb;
+  background-color: #F9FAFB;
 `;
 
 export const ColumnsContainer = styled.div`
@@ -39,7 +39,8 @@ export const Column = styled.div<{ $columnType?: string }>`
   flex-direction: column;
   max-height: 100%;
   overflow-y: hidden;
-  background-color: #f8fafc;
+    background-color: #f3f4f6;
+
   border-radius: 12px;
   border: 1px solid #f1f5f9;
 `;

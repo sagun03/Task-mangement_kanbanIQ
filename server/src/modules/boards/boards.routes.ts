@@ -191,4 +191,47 @@ router.get("/fetchByIds", async (req, res) => {
   await boardController.getBoardsByIds(req, res);
 });
 
+/**
+ * @swagger
+ * /boards/{id}:
+ *   patch:
+ *     summary: Partially update an existing board
+ *     tags: [Boards]
+ *     description: Updates only the provided fields of a board.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Board ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Board Name"
+ *               columnNames:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["To Do", "In Progress"]
+ *     responses:
+ *       200:
+ *         description: Board updated successfully
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Board not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/:id", async (req, res) => {
+  await boardController.partialUpdateBoard(req, res);
+});
+
 export default router;

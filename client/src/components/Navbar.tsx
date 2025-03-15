@@ -15,7 +15,7 @@ import {
   ListItemText,
   Paper,
 } from "@mui/material";
-import { color, fontWeight, styled } from "@mui/system";
+import { styled } from "@mui/system";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaLayerGroup } from "react-icons/fa";
@@ -79,7 +79,7 @@ const SearchBar = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const Navbar = () => {
+const Navbar = ({isSideBar = true}) => {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,7 +115,7 @@ console.log("isAuthenticated", isAuthenticated)
   return (
     <Box sx={{ display: "flex" }}>
       {/* Sidebar: Only show when authenticated */}
-      {(isAuthenticated || !isHomePage) && (
+      {isSideBar && (isAuthenticated || !isHomePage ) && (
         <StyledDrawer variant="permanent">
           <Box sx={{ 
             p: 2, 
@@ -239,7 +239,7 @@ console.log("isAuthenticated", isAuthenticated)
             }}
           >
             {/* Show Logo only when NOT authenticated */}
-            {(!isAuthenticated  || isHomePage) && (
+            {(!isSideBar || (!isAuthenticated  || isHomePage)) && (
               <>
                 <Typography
                   variant="h6"
@@ -256,7 +256,7 @@ console.log("isAuthenticated", isAuthenticated)
             )}
 
             {/* Show Search, Notifications & Avatar when logged in */}
-            {(isAuthenticated || !isHomePage) && (
+            {isSideBar && (isAuthenticated || !isHomePage) && (
               <>
                 <SearchBar>
                   <InputBase

@@ -13,6 +13,9 @@ export interface ITask extends Document {
   boardOriginalId: string;
   comments: { text: string; commentedBy: string; createdAt: Date }[];
   reminders: { reminderDate: Date; sent: boolean }[];
+  assignedToEmail?: string;
+  assignedByEmail?: string;
+  createdByEmail?: string;
 }
 
 const TaskSchema = new Schema<ITask>(

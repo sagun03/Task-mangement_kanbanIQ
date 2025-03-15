@@ -9,7 +9,7 @@ const StyledBackdrop = styled(Backdrop)`
 const LoadingOverlay = ({ loading }: { loading: boolean }) => {
   return (
     <StyledBackdrop open={loading}>
-      <CircularProgress color="inherit" />
+      <CircularProgress sx={{color: "black"}} />
     </StyledBackdrop>
   );
 };

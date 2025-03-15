@@ -112,6 +112,24 @@ class BoardController {
       return res.status(500).json({ message: "Error deleting board" });
     }
   }
+
+  async partialUpdateBoard(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const updatedBoard = await this.boardService.partialUpdateBoard(id, updateData);
+
+      if (!updatedBoard) {
+        return res.status(404).json({ message: "Board not found" });
+      }
+
+      res.status(200).json(updatedBoard);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
 }
 
 export default BoardController;

@@ -5,7 +5,7 @@ export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f7fb;
+  background-color: #F9FAFB;
 `;
 
 export const ContentContainer = styled.div`
