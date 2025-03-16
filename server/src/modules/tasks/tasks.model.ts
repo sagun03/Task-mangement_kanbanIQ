@@ -1,8 +1,10 @@
 // tasks.model.ts
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ITask extends Document {
   title: string;
+  _id: Types.ObjectId;
+  id?: string;
   description?: string;
   priority: "high" | "medium" | "low";
   dueDate: Date;
@@ -45,8 +47,22 @@ const TaskSchema = new Schema<ITask>(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform: function (_doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: function (_doc, ret) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+      },
+    },
   }
 );
 

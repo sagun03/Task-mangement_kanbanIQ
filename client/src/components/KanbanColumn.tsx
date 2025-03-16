@@ -22,14 +22,14 @@ const TaskCount = styled(Chip)`
   &.MuiChip-root {
     height: 20px;
     font-size: 0.7rem;
-    background-color: #E4E7EB;
+    background-color: #e4e7eb;
     color: #6c757d;
     margin-left: 8px;
   }
 `;
 
 const ColumnTitle = styled(Typography)`
-  font-weight: 600;
+  font-weight: bold;
   font-size: 0.9rem;
   color: #495057;
   display: flex;
@@ -155,10 +155,13 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           </EditContainer>
         ) : (
           <>
-            <ColumnTitle variant="subtitle2">
+            <ColumnTitle variant="h6">
               {columnTitle}
-              <TaskCount variant="filled" label={(tasks?.length ?? 0).toString()} />
-              </ColumnTitle>
+              <TaskCount
+                variant="filled"
+                label={(tasks?.length ?? 0).toString()}
+              />
+            </ColumnTitle>
 
             {/* Material UI Menu replaces shadcn Dropdown */}
             <div>
@@ -199,8 +202,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       </ColumnHeader>
 
       <Droppable droppableId={title}>
-        {(provided) => (
-          <TaskList ref={provided.innerRef} {...provided.droppableProps}>
+        {(provided, snapshot) => (
+          <TaskList
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={snapshot.isDraggingOver ? "isdraggingover" : ""} 
+          >
             {tasks.length > 0 ? (
               tasks.map((task, index) => {
                 const taskId =

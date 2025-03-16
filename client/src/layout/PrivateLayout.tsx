@@ -19,6 +19,7 @@ const PrivateLayout = ({ isSideBar = true }) => {
             flexGrow: 1,
             marginLeft: isSideBar ? "280px" : "none", // Adjust content width for the sidebar (sidebar width)
             padding: 2,
+            marginTop: "64px", // Adjust content margin for the navbar (navbar height)
             transition: "margin-left 0.3s ease", // Smooth transition
           }}
         >

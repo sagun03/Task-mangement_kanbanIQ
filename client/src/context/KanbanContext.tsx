@@ -12,10 +12,10 @@ import {
   fetchBoards,
   fetchTasks,
   fetchUsers,
-  updateTaskStatus,
+  updateTaskDetails,
   createTask,
   updateBoard,
-  fetchBoardById,
+  removeTask,
 } from "../services/api";
 
 interface KanbanContextType {
@@ -38,6 +38,7 @@ interface KanbanContextType {
     newColumnName: string
   ) => Promise<void>;
   deleteColumn: (boardId: string, columnId: string) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<boolean>;
 }
 
 const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
@@ -115,8 +116,8 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
       );
 
       // API call
-      if (updates.status) {
-        const updatedTask = await updateTaskStatus(taskId, updates.status);
+      if (updates) {
+        const updatedTask = await updateTaskDetails(taskId, updates);
         if (!updatedTask) {
           throw new Error("Failed to update task status");
         }
@@ -127,6 +128,23 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
       toast(`Failed to update task`, "error");
       // Revert optimistic update
       refreshData();
+    }
+  };
+
+  const deleteTask = async (taskId: string): Promise<boolean> => {
+    try {
+      const isDeleted = await removeTask(taskId);
+      if (isDeleted) {
+        setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
+  
+        toast(`Task deleted successfully`, "success", "Task removed");
+  
+        return true;
+      }
+      throw new Error("Failed to delete task");
+    } catch {
+      toast(`Failed to delete task.`, "error");
+      return false;
     }
   };
 
@@ -141,8 +159,8 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
         return newTask;
       }
       throw new Error("Failed to create task");
-    } catch (err: any) {
-      toast(`Failed to create task. ${err.message}`, "error");
+    } catch {
+      toast(`Failed to create task.`, "error");
       return null;
     }
   };
@@ -294,6 +312,7 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     getUserById,
     updateColumnName,
     deleteColumn,
+    deleteTask
   };
 
   return (

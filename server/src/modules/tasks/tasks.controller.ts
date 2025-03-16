@@ -88,7 +88,6 @@ class TaskController {
   public async updateTask(req: Request, res: Response) {
     const { id } = req.params;
     const updates = req.body;
-    console.log("updates", updates);
     try {
       const updatedTask = await this.taskService.updateExistingTask(id, updates);
       if (!updatedTask) {

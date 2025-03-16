@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import BoardService from "./boards.service";
 import { parseIdsFromQuery } from "../../utils/queryUtils";
+import { IBoard } from "./boards.model";
 
 class BoardController {
   private static instance: BoardController;
@@ -20,12 +21,13 @@ class BoardController {
   /**
    * Get all boards
    */
-  public async getBoards(req: Request, res: Response) {
+  public async getBoards(): Promise<IBoard[] | undefined> {
     try {
       const boards = await this.boardService.getAllBoards();
-      return res.status(200).json(boards);
+      return boards;
     } catch (error) {
-      return res.status(500).json({ message: "Error fetching boards" });
+      console.error("Error fetching boards:", error);
+      throw new Error("Error fetching boards");
     }
   }
 

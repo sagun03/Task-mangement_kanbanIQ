@@ -3,9 +3,10 @@ import { format } from "date-fns";
 import { ITask, IUser } from "../types/kanban";
 import { Draggable } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, Calendar, MoreHorizontal } from "lucide-react";
+import { MessageSquare, Calendar } from "lucide-react";
 import styled from "styled-components";
-import { Typography, IconButton, Chip, Avatar, Tooltip } from "@mui/material";
+import { Typography, Chip, Tooltip } from "@mui/material";
+import { UserAvatar } from "../pages/KanbanBoard";
 
 interface TaskCardProps {
   task: ITask;
@@ -77,18 +78,6 @@ const PriorityChip = styled(Chip)<{ priority: string }>`
   }
 `;
 
-const StyledIconButton = styled(IconButton)`
-  &.MuiIconButton-root {
-    padding: 4px;
-    color: #adb5bd;
-
-    &:hover {
-      background-color: #f8f9fa;
-      color: #6c757d;
-    }
-  }
-`;
-
 const TaskTitle = styled(Typography)`
   font-weight: bold;
   font-size: 1rem;
@@ -126,16 +115,11 @@ const MetaInfo = styled.div`
   font-size: 0.75rem;
 `;
 
-const UserAvatar = styled(Avatar)`
-  border: 1px solid #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-`;
-
 const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/task/${task._id || task.id}`);
+    navigate(`/kanban-board/tasks/${task._id || task.id}`);
   };
 
   const dueDate = task.dueDate ? new Date(task.dueDate) : null;
@@ -167,9 +151,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
               label={getPriorityText()}
               size="small"
             />
-            <StyledIconButton size="small">
+            {/* <StyledIconButton onClick={} size="small">
               <MoreHorizontal size={16} />
-            </StyledIconButton>
+            </StyledIconButton> */}
           </CardHeader>
 
           <TaskTitle variant="h6">{task.title}</TaskTitle>
@@ -189,10 +173,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
                   sx={{ backgroundColor: "white" }}
                 >
                   <UserAvatar
+                    userId={task.assignedTo}
                     sx={{
                       width: 30,
                       height: 30,
-                      bgcolor: "lightblue",
                       cursor: "pointer",
                     }}
                     src={assignedUser || "/default-avatar.png"}

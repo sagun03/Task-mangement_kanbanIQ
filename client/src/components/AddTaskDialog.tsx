@@ -14,28 +14,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormRow,
   StyledTextField,
-  CancelButton,
-  SubmitButton,
 } from "./styled/TaskFormElements";
+import { useAuth } from "../context/AuthContext";
 
-const AddTaskDialog = ({
-  open,
-  onClose,
-  onAddTask,
-  users,
-  boardId,
-  defaultStatus = "To Do",
-}) => {
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-    setValue,
-    register,
-  } = useForm({
+const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus = "To Do", board }) => {
+    const { user } = useAuth();
+  const { control, handleSubmit, reset, formState: { errors }, setValue, register } = useForm({
     defaultValues: {
       title: "",
       description: "",
@@ -43,6 +28,8 @@ const AddTaskDialog = ({
       assignedTo: "",
       status: defaultStatus,
       boardOriginalId: boardId,
+      assignedBy: user.id,
+      createdBy: user.id,
     },
   });
 
@@ -55,6 +42,11 @@ const AddTaskDialog = ({
   const handleClose = () => {
     reset();
     onClose();
+  };
+
+
+  const getUser = (userId: string) => {
+    return users.find((user) => user.id === userId);
   };
 
   const onSubmit = async (data) => {
@@ -72,96 +64,131 @@ const AddTaskDialog = ({
   return (
     <StyledDialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle style={{ color: "black", background: "white" }}>
+        <DialogTitle sx={{ color: "black", background: "white" }}>
           Create New Task
         </DialogTitle>
-        <DialogContent style={{ background: "white", marginTop: "20px" }}>
+        <DialogContent sx={{ background: "white", marginTop: "20px" }}>
           <label style={{ color: "black" }}>Task Title</label>
           <StyledTextField
             {...register("title", { required: "Title is required" })}
             autoFocus
-            id="title"
-            type="text"
             fullWidth
             variant="outlined"
             error={!!errors.title}
             helperText={errors.title?.message}
-            style={{ color: "black" }}
             placeholder="Enter a descriptive title"
+            sx={{
+              backgroundColor: "white",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "black" },
+                "&:hover fieldset": { borderColor: "black" },
+                "&.Mui-focused fieldset": { borderColor: "black" },
+              },
+            }}
           />
 
           <label style={{ color: "black" }}>Description</label>
           <StyledTextField
             {...register("description")}
-            id="description"
             multiline
             rows={3}
             fullWidth
             variant="outlined"
-            style={{ color: "black" }}
             placeholder="What needs to be done? Add details here..."
+            sx={{
+              backgroundColor: "white",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "black" },
+                "&:hover fieldset": { borderColor: "black" },
+                "&.Mui-focused fieldset": { borderColor: "black" },
+              },
+            }}
           />
 
-          <FormRow>
-            <label style={{ color: "black", flex: 1 }}>Priority</label>
-            <FormControl fullWidth error={!!errors.priority} sx={{ flex: 3 }}>
-              <Controller
-                name="priority"
-                control={control}
-                rules={{ required: "Priority is required" }}
-                render={({ field }) => (
-                  <Select {...field}>
-                    <MenuItem value="high">High</MenuItem>
-                    <MenuItem value="medium">Medium</MenuItem>
-                    <MenuItem value="low">Low</MenuItem>
-                  </Select>
-                )}
-              />
-              <FormHelperText>{errors.priority?.message}</FormHelperText>
-            </FormControl>
-          </FormRow>
-
-          <FormRow>
-            <label style={{ color: "black" }}>Due Date</label>
+          <label style={{ color: "black" }}>Priority</label>
+          <FormControl fullWidth error={!!errors.priority} sx={{ borderColor: "black" }}>
             <Controller
-              name="dueDate"
+              name="priority"
               control={control}
+              rules={{ required: "Priority is required" }}
               render={({ field }) => (
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DatePicker
-                    value={field.value}
-                    onChange={(date) => field.onChange(date)}
-                    slotProps={{
-                      textField: { fullWidth: true, variant: "outlined" },
-                    }}
-                  />
-                </LocalizationProvider>
+                <Select {...field} sx={{
+                  backgroundColor: "white",
+                 "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "black"
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: 'black',
+                    borderWidth: '1.2px'
+                  }
+                  
+                 
+                }}>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
+                </Select>
               )}
             />
-          </FormRow>
+            <FormHelperText>{errors.priority?.message}</FormHelperText>
+          </FormControl>
 
-          <FormRow>
-            <label style={{ color: "black" }}>Assign To</label>
-            <FormControl fullWidth error={!!errors.assignedTo}>
-              <Controller
-                name="assignedTo"
-                control={control}
-                rules={{ required: "Please assign this task to someone" }}
-                render={({ field }) => (
-                  <Select {...field}>
-                    {users.map((user) => (
-                      <MenuItem key={user.userId} value={user.userId}>
-                        {user.name || user.email}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                )}
-              />
-              <FormHelperText>{errors.assignedTo?.message}</FormHelperText>
-            </FormControl>
-          </FormRow>
+          <label style={{ color: "black" }}>Due Date</label>
+          <Controller
+            name="dueDate"
+            control={control}
+            render={({ field }) => (
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  value={field.value}
+                  onChange={(date) => field.onChange(date)}
+                  sx={{
+                    backgroundColor: "white",
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "black" },
+                      "&:hover fieldset": { borderColor: "black" },
+                      "&.Mui-focused fieldset": { borderColor: "black" },
+                    },
+                  }}
+                  slotProps={{
+                    textField: { fullWidth: true, variant: "outlined" },
+                  }}
+                />
+              </LocalizationProvider>
+            )}
+          />
+
+          <label style={{ color: "black" }}>Assign To</label>
+          <FormControl fullWidth error={!!errors.assignedTo} sx={{ borderColor: "black" }}>
+            <Controller
+              name="assignedTo"
+              control={control}
+              rules={{ required: "Please assign this task to someone" }}
+              render={({ field }) => (
+                <Select {...field} sx={{
+                  backgroundColor: "white",
+                 "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "black"
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: 'black',
+                    borderWidth: '1.2px'
+                  }
+                  
+                }}>
+                   {board?.acceptedUserIds?.map((id) => {
+                    const user = getUser(id);
+                    const value = user?.name || user?.email ;
+                    return <MenuItem key={user.id} value={id}>{value}</MenuItem>;
+                  })}
+                </Select>
+              )}
+            />
+            <FormHelperText>{errors.assignedTo?.message}</FormHelperText>
+          </FormControl>
         </DialogContent>
-        <DialogActions style={{ background: "white" }}>
+
+        <DialogActions sx={{ background: "white" }}>
           <Button onClick={handleClose} sx={{ color: "black" }}>
             Cancel
           </Button>

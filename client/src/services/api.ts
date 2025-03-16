@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { IBoard, ITask, IUser } from '../types/kanban';
 
@@ -60,6 +61,37 @@ export const fetchTasks = async (boardId?: string): Promise<ITask[]> => {
   }
 };
 
+export const fetchTaskById = async (taskId?: string): Promise<ITask | null> => {
+  try {
+    if (taskId) {
+      // Use the dedicated endpoint for fetching tasks by board ID
+      const url = `${API_URL}/tasks/${taskId}`;
+      console.log("Fetching tasks with URL:", url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error(`Failed to fetch task. Status: ${response.status}`);
+        throw new Error('Failed to fetch tasks for board');
+      }
+      
+      const task = await response.json();
+      console.log("API returned task", task);
+      return task;
+    } else {
+      // Fetch all tasks if no boardId is provided
+      const response = await fetch(`${API_URL}/tasks`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      
+      return await response.json();
+    }
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return null;
+  }
+};
+
 export const fetchUsers = async (): Promise<IUser[]> => {
   try {
     const response = await fetch(`${API_URL}/users`);
@@ -73,14 +105,14 @@ export const fetchUsers = async (): Promise<IUser[]> => {
   }
 };
 
-export const updateTaskStatus = async (taskId: string, status: string): Promise<ITask | null> => {
+export const updateTaskDetails = async (taskId: string, data: Partial<ITask>): Promise<ITask | null> => {
   try {
     const response = await fetch(`${API_URL}/tasks/${taskId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(data),
     });
     if (!response.ok) {
       throw new Error('Failed to update task status');
@@ -130,3 +162,63 @@ export const updateBoard = async (boardId: string, data: Partial<IBoard>): Promi
   }
 };
 
+export const removeTask = async (taskId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_URL}/tasks/${taskId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete task');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    return false;
+  }
+};
+
+export const acceptInvitation = async (token: string, userId: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/boardInvitation/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, userId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to accept invitation");
+    }
+
+    return { success: true, message: data.message };
+  } catch (error: any) {
+    console.error("Error accepting invitation:", error);
+    return { success: false, message: error.message || "Something went wrong." };
+  }
+};
+
+export const fetchInvitations = async (userId: string): Promise<{ success: boolean; invitations?: any[]; message?: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/boardInvitation/requests/${userId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await response.json();
+    console.log("Invitations data:", data);
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch invitations");
+    }
+
+    return { success: true, invitations: data };
+  } catch (error: any) {
+    console.error("Error fetching invitations:", error);
+    return { success: false, message: error.message || "Something went wrong." };
+  }
+};

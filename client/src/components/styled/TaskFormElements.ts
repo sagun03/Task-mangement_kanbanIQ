@@ -60,18 +60,18 @@ export const StyledTextField = styled(TextField)`
     transition: all 0.2s ease;
     
     &:hover .MuiOutlinedInput-notchedOutline {
-      border-color: #9b87f5;
+      border-color: black;
     }
     
     &.Mui-focused .MuiOutlinedInput-notchedOutline {
-      border-color: #7E69AB;
-      border-width: 2px;
+      border-color: black;
+      border-width: 1.2px;
     }
   }
   
   .MuiInputLabel-root {
     &.Mui-focused {
-      color: #7E69AB;
+      color: black;
     }
   }
 `;

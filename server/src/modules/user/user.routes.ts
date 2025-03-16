@@ -1,5 +1,7 @@
   import express from "express";
   import UserController from "./user.controller";
+import { cacheMiddleware } from "../../middlewares/cacheMiddleware";
+import redisClient from "../../config/redisclient";
 
   const router = express.Router();
   const userController = UserController.getInstance();
@@ -132,9 +134,14 @@
  *       500:
  *         description: Internal Server Error.
  */
-router.get("/", async (req, res) => {
+router.get("/", cacheMiddleware("users:all"), async (req, res) => {
   try {
-    await userController.getAllUsers(req, res);
+    const users = await userController.getAllUsers();
+    console.log("users", users);
+    await redisClient.setEx("users:all", 600, JSON.stringify(users));
+
+    res.status(200).json(users);
+
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Internal Server Error" });

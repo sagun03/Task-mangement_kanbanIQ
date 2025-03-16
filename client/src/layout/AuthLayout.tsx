@@ -37,6 +37,12 @@ const RightPanel = styled.div`
 
 const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation(); // Get current route
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get("redirect");
+
+  if (redirectPath) {
+    localStorage.setItem("redirectPath", redirectPath);
+  }
 
   // Determine the page type based on the current route
   const isSignUpPage = location.pathname.includes("signup");

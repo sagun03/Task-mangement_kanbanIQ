@@ -19,9 +19,9 @@ import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../config/firebase";
-import EmailIcon from '@mui/icons-material/Email';
-import CloseIcon from '@mui/icons-material/Close';
-import PasswordIcon from '@mui/icons-material/Password';
+import EmailIcon from "@mui/icons-material/Email";
+import CloseIcon from "@mui/icons-material/Close";
+import PasswordIcon from "@mui/icons-material/Password";
 import {
   Wrapper,
   Container,
@@ -57,13 +57,19 @@ const Login: React.FC = () => {
     formState: { errors },
   } = useForm<LoginFormInputs>();
   const navigate = useNavigate();
+  const redirectPath = localStorage.getItem("redirectPath");
 
   const onSubmit = async (data: LoginFormInputs) => {
     try {
       setLoading(true);
       await login(data.email, data.password);
       showToast("Login successful!", "success");
-      navigate("/dashboard");
+      if (redirectPath) {
+        localStorage.removeItem("redirectPath");
+        navigate(redirectPath);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: unknown) {
       const errorMsg = (err as Record<string, string>).message as string;
       showToast(errorMsg, "error");
@@ -99,7 +105,9 @@ const Login: React.FC = () => {
           <Divider style={{ width: "100%" }} />
 
           <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
-            <Box style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Box
+              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            >
               <StyledTextField
                 fullWidth
                 placeholder="Email"
@@ -115,8 +123,8 @@ const Login: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                    <EmailIcon color="action" />
-                  </InputAdornment>
+                      <EmailIcon color="action" />
+                    </InputAdornment>
                   ),
                 }}
               />
@@ -142,12 +150,14 @@ const Login: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                     <PasswordIcon color="action" />
+                      <PasswordIcon color="action" />
                     </InputAdornment>
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
                         {showPassword ? <HiEyeOff /> : <HiEye />}
                       </IconButton>
                     </InputAdornment>
@@ -165,8 +175,13 @@ const Login: React.FC = () => {
               </ForgotPasswordText>
             </FormActions>
 
-            <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
-            Login
+            <SubmitButton
+              variant="contained"
+              style={{ background: "black" }}
+              type="submit"
+              disabled={loading}
+            >
+              Login
             </SubmitButton>
           </form>
 
@@ -180,9 +195,17 @@ const Login: React.FC = () => {
                   setLoading(true);
                   await loginWithGoogle();
                   showToast("Login successful!", "success");
-                  navigate("/dashboard");
+                  if (redirectPath) {
+                    localStorage.removeItem("redirectPath");
+                    navigate(redirectPath);
+                  } else {
+                    navigate("/dashboard");
+                  }
                 } catch (error) {
-                  showToast(error?.message || "Login failed. Please try again.", "error");
+                  showToast(
+                    error?.message || "Login failed. Please try again.",
+                    "error"
+                  );
                 } finally {
                   setLoading(false);
                 }
@@ -195,14 +218,26 @@ const Login: React.FC = () => {
       </Container>
 
       {/* Modal for Forgot Password */}
-      <Dialog open={isForgotPasswordOpen} onClose={() => setIsForgotPasswordOpen(false)}>
-         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        Reset Password
-        <IconButton onClick={() => setIsForgotPasswordOpen(false)} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ pb: 2 }}>
+      <Dialog
+        open={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          Reset Password
+          <IconButton
+            onClick={() => setIsForgotPasswordOpen(false)}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pb: 2 }}>
           <StyledTextField
             fullWidth
             placeholder="Enter your email"
@@ -213,8 +248,8 @@ const Login: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                <EmailIcon color="action" />
-              </InputAdornment>
+                  <EmailIcon color="action" />
+                </InputAdornment>
               ),
             }}
           />
