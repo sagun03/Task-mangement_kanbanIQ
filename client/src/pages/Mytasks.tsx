@@ -12,27 +12,40 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { MdAdd, MdArrowBack, MdDelete } from 'react-icons/md';
+import { MdAdd, MdArrowBack, MdDelete, MdEdit } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import api from '../config/axiosInstance';
 import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
+import { socketService } from '../services/Socket';
 
 interface Task {
-  id: string;
+  id?: string;
+  _id?: string;  // Add MongoDB id
   title: string;
   description: string;
   status: string;
   dueDate: string;
   priority: string;
   boardOriginalId: string;
+  assignedTo: string;
+  assignedBy: string;
+  createdBy: string;
 }
 
 // Add a type for valid status values
 type TaskStatus = 'To Do' | 'In Progress' | 'Completed';
+
+const STATUS_OPTIONS = ['To Do', 'In Progress', 'Completed'];
+const PRIORITY_OPTIONS = ['low', 'medium', 'high'];
 
 const TaskCard = styled(Card)({
   height: '100%',
@@ -66,18 +79,64 @@ const DeleteButton = styled(IconButton)({
   },
 });
 
+const EditButton = styled(IconButton)({
+  position: "absolute",
+  top: 12,
+  right: 48, // Position it next to delete button
+  color: "#000000",
+  opacity: 0.5,
+  transition: "all 0.2s ease",
+  padding: "8px",
+  "&:hover": {
+    backgroundColor: "rgba(246, 245, 255, 0.1)",
+    opacity: 1,
+    color: "#2563eb",
+  },
+});
+
 const MyTasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [editedStatus, setEditedStatus] = useState('');
+  const [editedPriority, setEditedPriority] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // Add this useEffect for socket connection
+  useEffect(() => {
+    if (user?.userId) {
+      console.log('Initializing socket connection for user:', user.userId);
+      socketService.connect(user.userId);
+
+      socketService.onTaskUpdate((updatedTask) => {
+        console.log('📝 Received task update in MyTasks:', updatedTask);
+        setTasks(prevTasks => {
+          const newTasks = prevTasks.map(task => 
+            (task.id === updatedTask.id || task._id === updatedTask._id) 
+              ? updatedTask 
+              : task
+          );
+          console.log('Updated tasks state:', newTasks);
+          return newTasks;
+        });
+      });
+
+      return () => {
+        console.log('Cleaning up socket connection for user:', user.userId);
+        socketService.disconnect();
+      };
+    }
+  }, [user?.userId]);
 
   const fetchTasks = async () => {
     try {
@@ -100,6 +159,56 @@ const MyTasks: React.FC = () => {
     } catch (error) {
       console.error('Error deleting task:', error);
       setError('Failed to delete task');
+    }
+  };
+
+  // Add handler functions for editing
+  const handleStartEdit = (task: Task) => {
+    setEditingTask(task);
+    setEditedTitle(task.title);
+    setEditedDescription(task.description);
+    setEditedStatus(task.status);
+    setEditedPriority(task.priority);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+    setEditedTitle('');
+    setEditedDescription('');
+    setEditedStatus('');
+    setEditedPriority('');
+  };
+
+  // Add this function after handleCancelEdit
+  const handleSaveEdit = async (taskId: string) => {
+    try {
+      const updatedTaskData = {
+        title: editedTitle,
+        description: editedDescription,
+        status: editedStatus,
+        priority: editedPriority
+      };
+
+      const response = await api.put(`/tasks/${taskId}`, updatedTaskData);
+
+      if (response.status === 200) {
+        console.log('Task updated successfully:', response.data);
+        
+        // Update local state first
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            (task.id === taskId || task._id === taskId) 
+              ? { ...task, ...updatedTaskData }
+              : task
+          )
+        );
+
+        // Socket event will be emitted from server
+        handleCancelEdit();
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      setError('Failed to update task');
     }
   };
 
@@ -216,6 +325,12 @@ const MyTasks: React.FC = () => {
           {tasks.map((task) => (
             <Grid item xs={12} sm={6} md={4} key={task.id}>
               <TaskCard>
+                <EditButton
+                  onClick={() => handleStartEdit(task)}
+                  aria-label="edit"
+                >
+                  <MdEdit />
+                </EditButton>
                 <DeleteButton
                   onClick={(e) => {
                     e.stopPropagation();
@@ -342,6 +457,86 @@ const MyTasks: React.FC = () => {
             }}
           >
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog 
+        open={!!editingTask} 
+        onClose={handleCancelEdit}
+        PaperProps={{
+          sx: {
+            width: '100%',
+            maxWidth: 500,
+            borderRadius: 2,
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          Edit Task
+        </DialogTitle>
+        <DialogContent sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Description"
+              value={editedDescription}
+              onChange={(e) => setEditedDescription(e.target.value)}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={editedStatus}
+                label="Status"
+                onChange={(e) => setEditedStatus(e.target.value)}
+              >
+                {STATUS_OPTIONS.map(status => (
+                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Priority</InputLabel>
+              <Select
+                value={editedPriority}
+                label="Priority"
+                onChange={(e) => setEditedPriority(e.target.value)}
+              >
+                {PRIORITY_OPTIONS.map(priority => (
+                  <MenuItem key={priority} value={priority}>{priority}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCancelEdit}
+            sx={{ 
+              color: '#666666',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.05)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => editingTask && handleSaveEdit(editingTask.id)}
+            sx={{
+              bgcolor: 'black',
+              color: 'white'
+            }}
+          >
+            Save Changes
           </Button>
         </DialogActions>
       </Dialog>

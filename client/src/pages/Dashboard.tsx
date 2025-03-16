@@ -23,9 +23,13 @@ import {
   CssBaseline,
   useMediaQuery,
   Chip,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { MdAdd, MdNavigateNext, MdNavigateBefore } from "react-icons/md";
+import { MdAdd, MdNavigateNext, MdNavigateBefore, MdSave, MdClose, MdEdit } from "react-icons/md";
 import "@fontsource/open-sans/600.css";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/axiosInstance";
@@ -145,6 +149,11 @@ interface ActivityItem {
 }
 
 export default function Dashboard() {
+  // Add these at the top with other state declarations
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedPriority, setEditedPriority] = useState('');
+  
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -201,6 +210,65 @@ export default function Dashboard() {
       fetchTasks();
     }
   }, [user?.userId]);
+
+  // Add these handler functions in your component
+  const handleStartEdit = (task: Task) => {
+    setEditingTask(task);
+    setEditedTitle(task.title);
+    setEditedPriority(task.priority);
+  };
+  
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+    setEditedTitle('');
+    setEditedPriority('');
+  };
+  
+  const handleSaveEdit = async (taskId: string) => {
+    try {
+      const response = await api.put(`/tasks/${taskId}`, {
+        title: editedTitle,
+        priority: editedPriority
+      });
+  
+      if (response.status === 200) {
+        // Update local state
+        setTasks(tasks.map(task => 
+          task.id === taskId 
+            ? { ...task, title: editedTitle, priority: editedPriority }
+            : task
+        ));
+        handleCancelEdit();
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const handleKeyDown = async (e: React.KeyboardEvent, taskId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      try {
+        const response = await api.put(`/tasks/${taskId}`, {
+          title: editedTitle,
+          priority: editedPriority
+        });
+    
+        if (response.status === 200) {
+          setTasks(tasks.map(task => 
+            task.id === taskId 
+              ? { ...task, title: editedTitle, priority: editedPriority }
+              : task
+          ));
+          handleCancelEdit();
+        }
+      } catch (error) {
+        console.error('Error updating task:', error);
+      }
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
 
   const activities: ActivityItem[] = [
     {
@@ -410,63 +478,107 @@ export default function Dashboard() {
                               mb: 2,
                               border: "1px solid rgba(0,0,0,0.1)",
                               boxShadow: "none",
+                              position: "relative",
                               "&:hover": {
                                 boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
+                                "& .edit-actions": {
+                                  opacity: 1,
+                                },
                               },
                             }}
                           >
                             <CardContent sx={{ p: 2 }}>
-                              <Typography
-                                sx={{
-                                  color: "#0e182b",
-                                  fontWeight: 500,
-                                  mb: 1,
-                                }}
-                              >
-                                {task.title}
-                              </Typography>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
-                                  sx={{ color: "#666666" }}
-                                >
-                                  Due:{" "}
-                                  {new Date(task.dueDate).toLocaleDateString()}
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    gap: 1,
-                                  }}
-                                >
-                                  <Chip
-                                    label={task.priority}
+                              {editingTask?.id === task.id ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                  <TextField
+                                    fullWidth
+                                    value={editedTitle}
+                                    onChange={(e) => setEditedTitle(e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(e, task.id)}
                                     size="small"
-                                    sx={{
-                                      bgcolor:
-                                        task.priority === "high"
-                                          ? "#fee2e2"
-                                          : task.priority === "medium"
-                                          ? "#fef3c7"
-                                          : "#ecfdf5",
-                                      color:
-                                        task.priority === "high"
-                                          ? "#dc2626"
-                                          : task.priority === "medium"
-                                          ? "#d97706"
-                                          : "#059669",
-                                      fontWeight: 500,
-                                      fontSize: "0.75rem",
-                                    }}
+                                    autoFocus
                                   />
+                                  <FormControl size="small" fullWidth>
+                                    <Select
+                                      value={editedPriority}
+                                      onChange={(e) => setEditedPriority(e.target.value)}
+                                      onKeyDown={(e) => handleKeyDown(e, task.id)}
+                                    >
+                                      <MenuItem value="high">High</MenuItem>
+                                      <MenuItem value="medium">Medium</MenuItem>
+                                      <MenuItem value="low">Low</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                  <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
+                                    Press Enter to save or Escape to cancel
+                                  </Typography>
                                 </Box>
-                              </Box>
+                              ) : (
+                                <>
+                                  <Typography
+                                    sx={{
+                                      color: "#0e182b",
+                                      fontWeight: 500,
+                                      mb: 1,
+                                    }}
+                                  >
+                                    {task.title}
+                                  </Typography>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <Typography variant="caption" sx={{ color: "#666666" }}>
+                                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                                    </Typography>
+                                    <Box sx={{ display: "flex", gap: 1 }}>
+                                      <Chip
+                                        label={task.priority}
+                                        size="small"
+                                        sx={{
+                                          bgcolor:
+                                            task.priority === "high"
+                                              ? "#fee2e2"
+                                              : task.priority === "medium"
+                                              ? "#fef3c7"
+                                              : "#ecfdf5",
+                                          color:
+                                            task.priority === "high"
+                                              ? "#dc2626"
+                                              : task.priority === "medium"
+                                              ? "#d97706"
+                                              : "#059669",
+                                          fontWeight: 500,
+                                          fontSize: "0.75rem",
+                                        }}
+                                      />
+                                    </Box>
+                                  </Box>
+                                  <Box
+                                    className="edit-actions"
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 8,
+                                      right: 8,
+                                      opacity: 0,
+                                      transition: 'opacity 0.2s',
+                                      display: 'flex',
+                                      gap: 0.5,
+                                    }}
+                                  >
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleStartEdit(task)}
+                                      sx={{ color: '#666666' }}
+                                    >
+                                      <MdEdit />
+                                    </IconButton>
+                                  </Box>
+                                </>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
