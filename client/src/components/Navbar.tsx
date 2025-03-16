@@ -14,8 +14,11 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  Badge,
+  ListItem,
+  Divider,
 } from "@mui/material";
-import { color, fontWeight, styled } from "@mui/system";
+import { styled } from "@mui/system";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaLayerGroup } from "react-icons/fa";
@@ -28,7 +31,10 @@ import {
   MdGroups,
   MdLogout,
 } from "react-icons/md";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchInvitations } from "../services/api";
+import { useKanban } from "../context/KanbanContext";
+import { Mail } from "lucide-react";
 
 // Styled SearchBar component
 const drawerWidth = 280;
@@ -65,26 +71,23 @@ const MenuItemText = styled(ListItemText)({
   }
 });
 
-const SearchBar = styled(Paper)(({ theme }) => ({
-  padding: "2px 4px",
-  display: "flex",
-  alignItems: "center",
-  width: "100%",
-  maxWidth: 400,
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  boxShadow: "none",
-  [theme.breakpoints.down("sm")]: {
-    maxWidth: "100%",
-  },
-}));
-
-const Navbar = () => {
+const Navbar = ({isSideBar = true}) => {
   const { isAuthenticated, logout, user } = useAuth();
+  const { boards } = useKanban();
+
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  
+  const getBoard = (boardId: string) => {
+    return boards.find(
+      (board) => (board._id?.toString() || board.id?.toString()) === boardId
+    );
+  };
+
 
   // Open & Close Dropdown
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -111,11 +114,38 @@ const Navbar = () => {
     { text: 'Team Collaboration', icon: MdGroups, path: '/dashboard/team' },
   ];
 
+  const loadInvitations = async () => {
+    const response = await fetchInvitations(user?.id);
+  console.log("response", response)
+    if (response.success) {
+      setInvitations(response.invitations || []);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadInvitations();
+    }
+  }, [isAuthenticated, user]);
+
+  const handleNotificationsOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationsAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationsClose = () => {
+    setNotificationsAnchorEl(null);
+  };
+
+  const handleAcceptInvitation = (token: string) => {
+    navigate(`/accept-invitation/${token}`);
+    handleNotificationsClose();
+  };
+
 console.log("isAuthenticated", isAuthenticated)
   return (
     <Box sx={{ display: "flex" }}>
       {/* Sidebar: Only show when authenticated */}
-      {(isAuthenticated || !isHomePage) && (
+      {isSideBar && (isAuthenticated || !isHomePage ) && (
         <StyledDrawer variant="permanent">
           <Box sx={{ 
             p: 2, 
@@ -226,9 +256,9 @@ console.log("isAuthenticated", isAuthenticated)
       {/* Header: Always show the AppBar */}
       <Box sx={{ flexGrow: 1 }}>
         <AppBar
-          position="static"
-          color="transparent"
-          sx={{ borderBottom: "2px solid #F5F5F5" }}
+          position="fixed"
+          sx={{ backgroundColor: "white", color: "black", borderBottom: "2px solid #F5F5F5" }}
+          // backgroundColor="white"
           elevation={0}
         >
           <Toolbar
@@ -237,9 +267,10 @@ console.log("isAuthenticated", isAuthenticated)
               justifyContent: "space-between",
               alignItems: "center",
             }}
+
           >
             {/* Show Logo only when NOT authenticated */}
-            {(!isAuthenticated  || isHomePage) && (
+            {(!isSideBar || (!isAuthenticated  || isHomePage)) && (
               <>
                 <Typography
                   variant="h6"
@@ -247,7 +278,9 @@ console.log("isAuthenticated", isAuthenticated)
                     fontWeight: "bold",
                     display: "flex",
                     alignItems: "center",
+                    cursor: "pointer",
                   }}
+                  onClick={() => navigate("/dashboard")}
                 >
                   <FaLayerGroup style={{ marginRight: "10px" }} />
                   KanbanIQ
@@ -256,9 +289,9 @@ console.log("isAuthenticated", isAuthenticated)
             )}
 
             {/* Show Search, Notifications & Avatar when logged in */}
-            {(isAuthenticated || !isHomePage) && (
+            {isSideBar && (isAuthenticated || !isHomePage) && (
               <>
-                <SearchBar>
+                {/* <SearchBar>
                   <InputBase
                     sx={{ ml: 1, flex: 1, color: "#0e182b" }}
                     placeholder="Search tasks, boards..."
@@ -267,39 +300,58 @@ console.log("isAuthenticated", isAuthenticated)
                   <IconButton type="button" aria-label="search">
                     <MdSearch style={{ color: "#0e182b" }} />
                   </IconButton>
-                </SearchBar>
+                </SearchBar> */}
+                <div>
+                  </div>
               </>
             )}
 
             {/* Authenticated User View */}
             {isAuthenticated && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <IconButton color="inherit">
-                  <MdNotifications size={28} />
-                </IconButton>
-                <Typography
-                  style={{ cursor: "pointer" }}
-                  onClick={handleMenuOpen}
-                  variant="body1"
-                >
-                  {user?.name || user?.email}
-                </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* Notifications Icon with Badge */}
+          <IconButton color="inherit" onClick={handleNotificationsOpen}>
+            <Badge badgeContent={invitations.length} color="error">
+              <MdNotifications size={28} />
+            </Badge>
+          </IconButton>
 
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem onClick={() => navigate("/profile")}>
-                    Profile
-                  </MenuItem>
-                  <MenuItem onClick={() => navigate("/settings")}>
-                    Settings
-                  </MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-              </Box>
+          {/* Notifications Dropdown */}
+          <Menu anchorEl={notificationsAnchorEl} open={Boolean(notificationsAnchorEl)} onClose={handleNotificationsClose}>
+            {invitations.length > 0 ? (
+              <List>
+                {invitations.map((invitation, index) => (
+                  <div key={invitation._id}>
+                  <ListItem sx={{ cursor: "pointer", maxWidth: "300px" }} onClick={() => handleAcceptInvitation(invitation.token)}>
+                    <ListItemIcon sx={{ minWidth: "45px"}}>
+                      <Mail size={24} color="black" /> {/* Lucide React Mail icon */}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={`Invitation to board: ${getBoard(invitation.boardId)?.name}`} 
+                      secondary="Click to accept" 
+                    />
+                  </ListItem>
+                  {index < invitations.length - 1 && <Divider />} {/* Add divider except for last item */}
+                </div>
+                ))}
+              </List>
+            ) : (
+              <MenuItem disabled>No new invitations</MenuItem>
             )}
+          </Menu>
+
+          {/* User Profile Dropdown */}
+          <Typography style={{ cursor: "pointer" }} onClick={handleMenuOpen} variant="body1">
+            {user?.name || user?.email}
+          </Typography>
+
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+            <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
+            <MenuItem onClick={() => navigate("/settings")}>Settings</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          </Menu>
+        </Box>
+      )}
             {!isAuthenticated && (
               <Box
                 sx={{

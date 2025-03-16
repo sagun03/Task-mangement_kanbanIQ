@@ -54,8 +54,14 @@ export interface ITask {
   boardOriginalId: string;
   comments: { text: string; commentedBy: string; createdAt: Date | string }[];
   reminders: { reminderDate: Date | string; sent: boolean }[];
+  assignedToEmail?: string;
+  assignedByEmail?: string;
+  createdByEmail?: string;
 }
-
+export interface IColumn {
+  id: string;
+  name: string;
+}
 export interface IBoard {
   _id?: string | any;
   id?: string;
@@ -64,7 +70,7 @@ export interface IBoard {
   description?: string;
   invitedUserIds: string[];
   acceptedUserIds?: string[];
-  columnNames: string[];
+  columns: IColumn[];
   createdAt: Date | string;
   updatedAt: Date | string;
 }

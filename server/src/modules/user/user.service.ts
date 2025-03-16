@@ -75,4 +75,14 @@ export class UserService {
       throw new Error(`Failed to fetch user by ID: ${error.message}`);
     }
   }
+
+  public static async getAllUsers() {
+    try {
+      const users = await User.find(); 
+      return users;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch users: ${error.message}`);
+    }
+  }
+  
 }

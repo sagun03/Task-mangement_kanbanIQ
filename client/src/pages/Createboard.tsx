@@ -60,14 +60,14 @@ const CreateBoard: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       api
-      .get(`/users/getOtherUsers/${user?.id}`)
-      .then((response) => {
-        setUsers(response.data)
-      })
-      .catch((error) => {
-        console.error("Error fetching users:", error)
-        showToast('Error fetching Email addressess', "error");
-      })
+        .get(`/users/getOtherUsers/${user?.id}`)
+        .then((response) => {
+          setUsers(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching users:", error);
+          showToast("Error fetching Email addressess", "error");
+        });
     }
   }, [user?.id]);
 
@@ -78,9 +78,10 @@ const CreateBoard: React.FC = () => {
       const boardData = {
         name: data.boardName,
         description: data.description,
-        adminId: user?.userId,
+        adminId: user?.id,
         invitedUserIds: selectedUsers.map((user) => user?.id),
-        columnNames: ["To-Do", "In-Progress", "Complete"],
+        acceptedUserIds: [user?.id],
+        columnNames: ["To Do", "In Progress", "Completed"],
       };
 
       const response = await api.post("/boards", boardData);
@@ -113,7 +114,13 @@ const CreateBoard: React.FC = () => {
             </Typography>
           </Box>
 
-          <Card sx={{ p: 4, boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)", borderRadius: 2 }}>
+          <Card
+            sx={{
+              p: 4,
+              boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.1)",
+              borderRadius: 2,
+            }}
+          >
             <form
               onSubmit={handleSubmit(onSubmit)}
               style={{
@@ -123,20 +130,39 @@ const CreateBoard: React.FC = () => {
                 maxWidth: "750px",
               }}
             >
-              <Typography fontWeight="bold" gutterBottom sx={{ fontSize: "25px", fontFamily: "Open Sans", textAlign: "left", marginBottom: 3 }}>
+              <Typography
+                fontWeight="bold"
+                gutterBottom
+                sx={{
+                  fontSize: "25px",
+                  fontFamily: "Open Sans",
+                  textAlign: "left",
+                  marginBottom: 3,
+                }}
+              >
                 Create New Board
               </Typography>
 
               {/* Board Name */}
               <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: "Open Sans", textAlign: "left" }}>
-                  Board Name
+                <Typography
+                  variant="body1"
+                  fontWeight="bold"
+                  mb={1}
+                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
+                >
+                  Board Name{" "}
+                  <Typography component="span" color="error">
+                    *
+                  </Typography>
                 </Typography>
                 <TextField
                   fullWidth
                   placeholder="Enter board name"
                   variant="outlined"
-                  {...register("boardName", { required: "Board name is required" })}
+                  {...register("boardName", {
+                    required: "Board name is required",
+                  })}
                   error={!!errors.boardName}
                   helperText={errors.boardName?.message}
                   sx={{
@@ -152,8 +178,16 @@ const CreateBoard: React.FC = () => {
 
               {/* Description */}
               <Box mb={3}>
-                <Typography variant="body1" fontWeight="bold" mb={1} sx={{ fontFamily: "Open Sans", textAlign: "left" }}>
-                  Description
+                <Typography
+                  variant="body1"
+                  fontWeight="bold"
+                  mb={1}
+                  sx={{ fontFamily: "Open Sans", textAlign: "left" }}
+                >
+                  Description{" "}
+                  <Typography component="span" color="error">
+                    *
+                  </Typography>
                 </Typography>
                 <TextField
                   fullWidth
@@ -161,8 +195,9 @@ const CreateBoard: React.FC = () => {
                   multiline
                   rows={3}
                   variant="outlined"
-                  
-                  {...register("description", { required: "Description is required" })}
+                  {...register("description", {
+                    required: "Description is required",
+                  })}
                   error={!!errors.description}
                   helperText={errors.description?.message}
                   sx={{
@@ -178,22 +213,37 @@ const CreateBoard: React.FC = () => {
 
               {/* Invite Team Members */}
               <div>
-                <h4>Invite Team Members</h4>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <h4>
+                  Invite Team Members{" "}
+                  <Typography component="span" color="error">
+                    *
+                  </Typography>
+                </h4>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
                   <Controller
                     name="selectedUsers"
                     control={control}
-                    render={({ field }) => (
+                    rules={{ required: "At least one user is required" }} // Use rules instead of register
+                    render={({ field, fieldState }) => (
                       <Autocomplete
                         multiple
                         options={users}
-                        getOptionLabel={(option) => option.email}
-                        value={selectedUsers}
+                        getOptionLabel={(option) => option?.email || ""}
+                        value={field.value || []} // Ensure controlled behavior
                         onChange={(event, newValue) => {
                           field.onChange(newValue);
-                          setSelectedUsers(newValue);
+                          setSelectedUsers(newValue); // Optional, only if needed elsewhere
                         }}
-                        renderInput={(params) => <TextField {...params} label="Enter email address" />}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Enter email address"
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                          />
+                        )}
                         sx={{
                           flex: 1,
                           backgroundColor: "white",
@@ -201,7 +251,7 @@ const CreateBoard: React.FC = () => {
                             "& fieldset": { borderColor: "#ced4da" },
                             "&:hover fieldset": { borderColor: "black" },
                             "&.Mui-focused fieldset": { borderColor: "black" },
-                          }
+                          },
                         }}
                       />
                     )}
@@ -211,18 +261,33 @@ const CreateBoard: React.FC = () => {
                 {/* Avatars Preview */}
                 <AvatarContainer>
                   {selectedUsers?.slice(0, 3).map((user, index) => (
-                    <Avatar key={index} src={user?.name || "https://via.placeholder.com/32"} alt={user?.name}>
+                    <Avatar
+                      key={index}
+                      src={user?.name || "https://via.placeholder.com/32"}
+                      alt={user?.name}
+                    >
                       {user?.email[0]?.toUpperCase()}
                     </Avatar>
                   ))}
-                  {selectedUsers.length > 3 && <MoreUsersBadge>+{selectedUsers.length - 3}</MoreUsersBadge>}
+                  {selectedUsers.length > 3 && (
+                    <MoreUsersBadge>+{selectedUsers.length - 3}</MoreUsersBadge>
+                  )}
                 </AvatarContainer>
               </div>
 
               {/* Action Buttons */}
               <Box display="flex" gap={4} mt={4} justifyContent="center">
-                <Button variant="contained" type="submit" sx={{ textTransform: "none", backgroundColor: "black", color: "white", "&:hover": { backgroundColor: "#333" } }}>
-                Create Board
+                <Button
+                  variant="contained"
+                  type="submit"
+                  sx={{
+                    textTransform: "none",
+                    backgroundColor: "black",
+                    color: "white",
+                    "&:hover": { backgroundColor: "#333" },
+                  }}
+                >
+                  Create Board
                 </Button>
               </Box>
             </form>

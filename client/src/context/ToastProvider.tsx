@@ -31,15 +31,15 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     setToast((prev) => ({ ...prev, open: false }));
   };
 
+console.log("toast", toast);
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
       <Snackbar
         open={toast.open}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        autoHideDuration={5000}
+        autoHideDuration={4000}
         onClose={handleClose}
-        TransitionComponent={(props) => <Slide {...props} direction="left" />}
       >
         <Alert onClose={handleClose} variant="filled" sx={{ borderRadius: 4 }} severity={toast.type}>
           <AlertTitle sx={{textAlign: "left"}}>

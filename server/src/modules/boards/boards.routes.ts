@@ -1,5 +1,7 @@
 import express from "express";
 import BoardController from "./boards.controller";
+import { cacheMiddleware, clearCacheMiddleware } from "../../middlewares/cacheMiddleware";
+import redisClient from "../../config/redisclient";
 
 const router = express.Router();
 const boardController = BoardController.getInstance();
@@ -18,8 +20,17 @@ const boardController = BoardController.getInstance();
  *       500:
  *         description: Internal server error
  */
-router.get("/", async (req, res) => {
-  await boardController.getBoards(req, res);
+router.get("/", cacheMiddleware("boards:all"), async (req, res) => {
+  try {
+    const boards = await boardController.getBoards();
+    // Store the fetched boards in Redis for 10 minutes (600 seconds)
+    await redisClient.setEx("boards:all", 600, JSON.stringify(boards));
+
+    res.status(200).json(boards);
+  } catch (error) {
+    console.error("Error fetching boards:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
 
 // Get a board by ID
@@ -88,7 +99,7 @@ router.get("/:id", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post("/", async (req, res) => {
+router.post("/", clearCacheMiddleware("boards:all"), async (req, res) => {
   await boardController.createBoard(req, res);
 });
 
@@ -130,7 +141,7 @@ router.post("/", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", clearCacheMiddleware("boards:all"), async (req, res) => {
   await boardController.updateBoard(req, res);
 });
 
@@ -157,7 +168,7 @@ router.put("/:id", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", clearCacheMiddleware("boards:all"), async (req, res) => {
   await boardController.deleteBoard(req, res);
 });
 
@@ -189,6 +200,49 @@ router.delete("/:id", async (req, res) => {
  */
 router.get("/fetchByIds", async (req, res) => {
   await boardController.getBoardsByIds(req, res);
+});
+
+/**
+ * @swagger
+ * /boards/{id}:
+ *   patch:
+ *     summary: Partially update an existing board
+ *     tags: [Boards]
+ *     description: Updates only the provided fields of a board.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Board ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Board Name"
+ *               columnNames:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["To Do", "In Progress"]
+ *     responses:
+ *       200:
+ *         description: Board updated successfully
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Board not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/:id", clearCacheMiddleware("boards:all"), async (req, res) => {
+  await boardController.partialUpdateBoard(req, res);
 });
 
 export default router;

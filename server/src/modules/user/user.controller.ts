@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ZodError } from "zod";
 import { UserService } from "./user.service";
+import { IUser } from "./user.model";
 
 class UserController {
   private static instance: UserController;
@@ -59,6 +60,15 @@ class UserController {
     } catch (error) {
       console.error("Error fetching users:", error);
       UserController.handleError(res, "Failed to fetch users", error, 500);    }
+  }
+
+  public async getAllUsers(): Promise<IUser[]> {
+    try {
+      return await UserService.getAllUsers(); 
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      throw new Error("Internal Server Error"); 
+    }
   }
 }
 

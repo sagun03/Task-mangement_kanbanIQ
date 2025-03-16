@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const BoardContainer = styled.div`
   display: flex;
@@ -6,7 +6,7 @@ export const BoardContainer = styled.div`
   height: 100%;
   min-height: calc(100vh - 64px);
   padding: 16px;
-  background-color: #f5f7fb;
+  background-color: #f9fafb;
 `;
 
 export const ColumnsContainer = styled.div`
@@ -20,12 +20,12 @@ export const ColumnsContainer = styled.div`
   &::-webkit-scrollbar {
     height: 8px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background-color: #f1f1f1;
     border-radius: 10px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background-color: #ddd;
     border-radius: 10px;
@@ -34,12 +34,13 @@ export const ColumnsContainer = styled.div`
 
 export const Column = styled.div<{ $columnType?: string }>`
   min-width: 300px;
-  width: 300px;
+  width: 350px;
   display: flex;
   flex-direction: column;
   max-height: 100%;
   overflow-y: hidden;
-  background-color: #f8fafc;
+  background-color: #f3f4f6;
+
   border-radius: 12px;
   border: 1px solid #f1f5f9;
 `;
@@ -47,28 +48,33 @@ export const Column = styled.div<{ $columnType?: string }>`
 export const ColumnHeader = styled.div`
   padding: 16px;
   margin-bottom: 8px;
+  font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1.5px solid #e9ecef;
 `;
 
 export const TaskList = styled.div`
   flex-grow: 1;
   overflow-y: auto;
   padding: 8px 16px;
-  
+
   &::-webkit-scrollbar {
     width: 4px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background-color: transparent;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
     border-radius: 10px;
+  }
+
+  &.isdraggingover {
+    background-color: #E5E7EB;
   }
 `;
 
@@ -79,7 +85,7 @@ export const TaskCard = styled.div`
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid #f1f5f9;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -115,7 +121,9 @@ export const TaskDate = styled.div`
   gap: 4px;
 `;
 
-export const PriorityChip = styled.div<{ $priority?: 'high' | 'medium' | 'low' }>`
+export const PriorityChip = styled.div<{
+  $priority?: "high" | "medium" | "low";
+}>`
   font-size: 0.7rem;
   height: 20px;
   display: flex;
@@ -125,40 +133,41 @@ export const PriorityChip = styled.div<{ $priority?: 'high' | 'medium' | 'low' }
   border-radius: 4px;
   background-color: ${({ $priority }) => {
     switch ($priority) {
-      case 'high':
-        return '#ffebee';
-      case 'medium':
-        return '#fff8e1';
-      case 'low':
-        return '#e8f5e9';
+      case "high":
+        return "#ffebee";
+      case "medium":
+        return "#fff8e1";
+      case "low":
+        return "#e8f5e9";
       default:
-        return '#f5f5f5';
+        return "#f5f5f5";
     }
   }};
   color: ${({ $priority }) => {
     switch ($priority) {
-      case 'high':
-        return '#d32f2f';
-      case 'medium':
-        return '#ff8f00';
-      case 'low':
-        return '#2e7d32';
+      case "high":
+        return "#d32f2f";
+      case "medium":
+        return "#ff8f00";
+      case "low":
+        return "#2e7d32";
       default:
-        return '#616161';
+        return "#616161";
     }
   }};
-  border: 1px solid ${({ $priority }) => {
-    switch ($priority) {
-      case 'high':
-        return '#ffcdd2';
-      case 'medium':
-        return '#ffe082';
-      case 'low':
-        return '#c8e6c9';
-      default:
-        return '#e0e0e0';
-    }
-  }};
+  border: 1px solid
+    ${({ $priority }) => {
+      switch ($priority) {
+        case "high":
+          return "#ffcdd2";
+        case "medium":
+          return "#ffe082";
+        case "low":
+          return "#c8e6c9";
+        default:
+          return "#e0e0e0";
+      }
+    }};
 `;
 
 export const PriorityChipWithLabel = styled(PriorityChip)`
@@ -188,10 +197,10 @@ export const BoardCard = styled.div`
   height: 200px;
   display: flex;
   flex-direction: column;
-  
+
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 

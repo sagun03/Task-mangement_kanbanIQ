@@ -3,6 +3,7 @@ import { tasksRoutes } from "./modules/tasks";
 import { authRoutes } from "./modules/auth";
 import { userRoutes } from "./modules/user";
 import { boardsRoutes } from "./modules/boards";
+import { boardInvitationRoutes } from "./modules/boardInvitation";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/tasks', tasksRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/boards', boardsRoutes);
+router.use('/boardInvitation', boardInvitationRoutes);
 
 export default router;

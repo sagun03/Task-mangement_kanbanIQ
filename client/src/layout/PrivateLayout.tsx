@@ -6,19 +6,20 @@ import Navbar from "../components/Navbar";
 
 // Lazy load the Sidebar and Navbar components
 
-const PrivateLayout = () => {
+const PrivateLayout = ({ isSideBar = true }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? (
     <div>
       {/* Suspense wrapper for lazy-loaded components */}
-      <Navbar />
+     <Navbar isSideBar={isSideBar}/>
 
       <React.Suspense fallback={<CircularProgress />}>
         <Box
           sx={{
             flexGrow: 1,
-            marginLeft: "280px", // Adjust content width for the sidebar (sidebar width)
+            marginLeft: isSideBar ? "280px" : "none", // Adjust content width for the sidebar (sidebar width)
             padding: 2,
+            marginTop: "64px", // Adjust content margin for the navbar (navbar height)
             transition: "margin-left 0.3s ease", // Smooth transition
           }}
         >

@@ -79,7 +79,7 @@ class BoardInvitationService {
       display: inline-block;
       padding: 12px 20px;
       background-color: black;
-      color: white;
+      color: white !important;
       text-decoration: none;
       border-radius: 5px;
       font-size: 16px;
@@ -129,12 +129,13 @@ class BoardInvitationService {
   /**
    * ✅ Accept an invitation using the token
    */
-  public async acceptInvitation(token: string): Promise<void> {
+  public async acceptInvitation(token: string, userId: string) {
     try {
       // Find the invitation by token
       const invitation = await BoardInvitation.findOne({
         token,
         status: "pending",
+        invitedUserId: userId,
       });
       if (!invitation) {
         throw new Error("Invalid or expired invitation.");
@@ -157,6 +158,8 @@ class BoardInvitationService {
         invitation.invitedUserId,
         invitation.boardId
       );
+      return { success: true, message: "Successfully joined the board!" };
+
     } catch (error: any) {
       throw new Error("Error accepting invitation: " + error.message);
     }
@@ -199,6 +202,15 @@ class BoardInvitationService {
       return null;
     } catch (error: any) {
       throw new Error("Error fetching invitation status: " + error.message);
+    }
+  }
+
+  public async getUserInvitations(userId: string) {
+    try {
+      const invitations = await BoardInvitation.find({ invitedUserId: userId, status: "pending" });
+      return invitations;
+    } catch (error: any) {
+      throw new Error("Error fetching invitations: " + error.message);
     }
   }
 }

@@ -125,6 +125,20 @@ class BoardService {
       throw new Error("Error fetching admin ID: " + error.message);
     }
   }
+
+  async partialUpdateBoard(id: string, updateData: Partial<any>) {
+    try {
+      const updatedBoard = await Board.findByIdAndUpdate(id, updateData, { new: true });
+
+      if (!updatedBoard) {
+        return null;
+      }
+
+      return updatedBoard;
+    } catch (error: any) {
+      throw new Error("Error updating board: " + error.message);
+    }
+  }
 }
 
 export default BoardService;
