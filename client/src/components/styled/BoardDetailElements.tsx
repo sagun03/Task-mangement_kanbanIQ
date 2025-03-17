@@ -1,11 +1,11 @@
 import styled from 'styled-components';
-import { Paper, Typography, Chip, CircularProgress as MuiCircularProgress } from '@mui/material';
+import { Paper, Typography, Chip, CircularProgress as MuiCircularProgress, MenuItem, Button } from '@mui/material';
 
 export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f5f7fb;
+  background-color: #F9FAFB;
 `;
 
 export const ContentContainer = styled.div`
@@ -92,32 +92,114 @@ export const SearchIconWrapper = styled.div`
   justify-content: center;
 `;
 
-export const FilterChip = styled(Chip)`
+export const FilterChip = styled(Chip)<{ $selected?: boolean }>`
   &.MuiChip-root {
-    height: 28px;
-    font-size: 0.75rem;
+    height: 30px;
+    font-size: 0.8rem;
     font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 16px;
+    transition: all 0.2s ease-in-out;
+    background: ${({ $selected }) => ($selected ? "linear-gradient(90deg, #6a11cb, #2575fc)" : "#f8f9fa")};
+    color: ${({ $selected }) => ($selected ? "white" : "#495057")};
+    border: ${({ $selected }) => ($selected ? "none" : "1px solid #dee2e6")};
+    cursor: pointer;
   }
-  
+
+  &:hover {
+    background: ${({ $selected }) => ($selected ? "#5b0dcd" : "#e9ecef")};
+    transform: scale(1.05);
+  }
+
   &.active {
-    background: linear-gradient(90deg, #9b87f5 0%, #7E69AB 100%);
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
     color: white;
   }
 `;
 
+
 export const FilterContainer = styled(Paper)`
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 `;
 
 export const FilterTitle = styled(Typography)`
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   margin-bottom: 8px;
-  color: #495057;
+  color: #333;
 `;
+export const AssignedFilterChip = styled(Chip)<{ $selected?: boolean }>`
+  &.MuiChip-root {
+    height: 30px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 16px;
+    transition: all 0.2s ease-in-out;
+    background: ${({ $selected }) => ($selected ? "linear-gradient(90deg, #34d399, #059669)" : "#f8f9fa")};
+    color: ${({ $selected }) => ($selected ? "white" : "#495057")};
+    border: ${({ $selected }) => ($selected ? "none" : "1px solid #dee2e6")};
+    cursor: pointer;
+  }
+
+  &:hover {
+    background: ${({ $selected }) => ($selected ? "#059669" : "#e9ecef")};
+    transform: scale(1.05);
+  }
+
+  &.active {
+    background: linear-gradient(90deg, #34d399, #059669);
+    color: white;
+  }
+`;
+
+export const FilterMenuButton = styled(Button)`
+  && {
+    background: #ffffff;
+    color: #333;
+    border: 1px solid #dee2e6;
+    text-transform: none;
+    font-weight: 500;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background: #f1f3f5;
+    }
+  }
+`;
+
+export const FilterMenuPaper = styled(Paper)`
+  min-width: 180px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+export const FilterMenuItem = styled(MenuItem)<{ $selected?: boolean }>`
+  && {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: ${({ $selected }) => ($selected ? "600" : "400")};
+    background: ${({ $selected }) => ($selected ? "#e9ecef" : "transparent")};
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      background: #e9ecef;
+    }
+  }
+`;
+
 
 export const CircularProgress = styled(MuiCircularProgress)`
   color: #9b87f5;

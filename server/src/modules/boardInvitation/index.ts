@@ -1,0 +1,1 @@
+export { default as boardInvitationRoutes } from './boardInvitation.route';

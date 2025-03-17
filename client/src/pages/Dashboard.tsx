@@ -34,6 +34,7 @@ import "@fontsource/open-sans/600.css";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/axiosInstance";
 import SkeletonLoader from "../components/SkeletonLoader";
+import { IBoard } from "../types/kanban";
 
 const drawerWidth = 280;
 
@@ -149,11 +150,6 @@ interface ActivityItem {
 }
 
 export default function Dashboard() {
-  // Add these at the top with other state declarations
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [editedTitle, setEditedTitle] = useState('');
-  const [editedPriority, setEditedPriority] = useState('');
-  
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -171,7 +167,7 @@ export default function Dashboard() {
         if (Array.isArray(response.data)) {
           // Filter boards where adminId matches user's uid
           const userBoards = response.data.filter(
-            (board) => board.adminId === user?.userId
+            (board) => board.adminId === user?.id || board.acceptedUserIds.includes(user?.id)
           );
           setBoards(userBoards);
           setColumns(userBoards.map((board) => board.columnNames).flat());
@@ -291,30 +287,34 @@ export default function Dashboard() {
       <CssBaseline />
       <Box sx={{ display: "flex", bgcolor: "#f8fafa" }}>
         <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: "#f8fafa" }}>
-          <Typography
-            sx={{
-              mb: 3,
-              fontSize: "30px",
-              fontWeight: "800",
-              textAlign: "left",
-            }}
-          >
-            Welcome back, {user?.name || user?.email}!
-          </Typography>
-
           <Box
             sx={{
               mb: 4,
               display: "flex",
-              justifyContent: "flex-start",
+              justifyContent: "space-between",
+              alignItems: "center",
+              alignContent: "center",
               flexWrap: "wrap",
               gap: 2,
             }}
           >
+            <Typography
+              sx={{
+                mb: 3,
+                fontSize: "30px",
+                fontWeight: "800",
+                alignItems: "center",
+                textAlign: "left",
+              }}
+            >
+              Welcome back, {user?.name || user?.email}!
+            </Typography>
+
             <Button
               variant="contained"
               sx={{
                 color: "#ffffff",
+                height: "60px",
                 bgcolor: "#0e182b",
                 textTransform: "none",
                 px: 3,
@@ -330,7 +330,7 @@ export default function Dashboard() {
             >
               Create Board
             </Button>
-            <Button
+            {/* <Button
               variant="outlined"
               sx={{
                 color: "#0e182b",
@@ -348,7 +348,7 @@ export default function Dashboard() {
               onClick={() => navigate("/createtask")}
             >
               Add Task
-            </Button>
+            </Button> */}
           </Box>
 
           <Typography
@@ -358,9 +358,17 @@ export default function Dashboard() {
             Active Boards
           </Typography>
           {loading ? (
-            <Box sx={{ display: "flex", gap: "20px" , mb: 4}}>
+            <Box sx={{ display: "flex", gap: "20px", mb: 4 }}>
               {[1, 2, 3].map((_, index) => (
-                <Box key={index} width="100%" sx={{background: "#fff", borderRadius: "10px", padding: "15px"}}>
+                <Box
+                  key={index}
+                  width="100%"
+                  sx={{
+                    background: "#fff",
+                    borderRadius: "10px",
+                    padding: "15px",
+                  }}
+                >
                   <SkeletonLoader count={1} width="80%" title />
                 </Box>
               ))}
@@ -396,23 +404,31 @@ export default function Dashboard() {
             </Grid>
           ) : (
             <Grid container spacing={4} sx={{ mb: 4 }}>
-              {boards.map((board) => (
-                <Grid item xs={12} sm={6} md={4} key={board.id}>
-                  <BoardCard>
-                    <CardContent>
-                      <Typography
-                        variant="h6"
-                        sx={{ color: "#0e182b", fontWeight: "bold" }}
-                      >
-                        {board.name}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "#0e182b" }}>
-                        Created At: {new Date(board.createdAt).toDateString()}
-                      </Typography>
-                    </CardContent>
-                  </BoardCard>
-                </Grid>
-              ))}
+              {boards
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
+                .map((board) => (
+                  <Grid item xs={12} sm={6} md={4} key={board.id}>
+                    <BoardCard
+                      onClick={() => navigate(`/kanban-board/${board.id}`)}
+                    >
+                      <CardContent>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: "#0e182b", fontWeight: "bold" }}
+                        >
+                          {board.name}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: "#0e182b" }}>
+                          Created At: {new Date(board.createdAt).toDateString()}
+                        </Typography>
+                      </CardContent>
+                    </BoardCard>
+                  </Grid>
+                ))}
             </Grid>
           )}
 
@@ -453,13 +469,22 @@ export default function Dashboard() {
                     </Typography>
                   </Box>
                   {tasksLoading ? (
-                   <>
-                    {[1].map((_, index) => (
-                <Box key={index} width="100%" sx={{background: "#fff", borderRadius: "10px", margin: "5px", padding: "20px"}}>
-                  <SkeletonLoader count={4} width="80%" title />
-                </Box>
-              ))}
-                   </>
+                    <>
+                      {[1].map((_, index) => (
+                        <Box
+                          key={index}
+                          width="100%"
+                          sx={{
+                            background: "#fff",
+                            borderRadius: "10px",
+                            margin: "5px",
+                            padding: "20px",
+                          }}
+                        >
+                          <SkeletonLoader count={4} width="80%" title />
+                        </Box>
+                      ))}
+                    </>
                   ) : tasksError ? (
                     <Typography
                       color="error"

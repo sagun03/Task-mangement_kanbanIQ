@@ -17,6 +17,8 @@ import Myboards from "./pages/Myboards";
 import Tasks from "./pages/Tasks";
 import MyTasks from "./pages/Mytasks";
 import KanbanBoard from "./pages/KanbanBoard";
+import TaskDetail from "./pages/TaskDetails";
+import AcceptInvitation from "./pages/AcceptInvitation";
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -72,9 +74,15 @@ const AppRoutes = () => {
         <Route path="/createtask" element={<Tasks />} />
         <Route path="/createboard" element={<CreateBoard />} />
 
-        <Route path="/kanban-board/:boardId" element={<PrivateLayout />} >
+        <Route path="/kanban-board/:boardId" element={<PrivateLayout isSideBar={false} />} >
         <Route index element={<KanbanBoard />} />
         </Route>
+
+        <Route path="/kanban-board/tasks/:taskId" element={<PrivateLayout isSideBar={false} />} >
+        <Route index element={<TaskDetail />} />
+        </Route>
+
+        <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
 
         {/* Redirect to Home if Route not found */}
         <Route path="*" element={<Navigate to="/dashboard" />} />

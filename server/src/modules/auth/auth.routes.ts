@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { verifyFirebaseToken } from "../../middlewares/validateToken.middleware";
 import AuthController from "./auth.controller";
+import { clearCacheMiddleware } from "../../middlewares/cacheMiddleware";
 
 const router = express.Router();
 const authController = AuthController.getInstance();
@@ -50,6 +51,7 @@ const authController = AuthController.getInstance();
 router.post(
   "/register",
   verifyFirebaseToken,
+  clearCacheMiddleware("users:all"),
   async (req: Request, res: Response): Promise<void> => {
     try {
       await authController.registerUser(req, res);

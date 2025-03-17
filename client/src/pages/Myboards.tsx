@@ -17,6 +17,7 @@ import { styled } from "@mui/material/styles";
 import { MdAdd, MdDelete } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/axiosInstance";
+import { IBoard } from "../types/kanban";
 
 const BoardCard = styled(Card)({
   height: 220,
@@ -32,7 +33,7 @@ const BoardCard = styled(Card)({
   "&:hover": {
     transform: "translateY(-4px)",
     boxShadow: "0 12px 24px rgba(0,0,0,0.08)",
-  }
+  },
 });
 
 const DeleteButton = styled(IconButton)({
@@ -50,21 +51,12 @@ const DeleteButton = styled(IconButton)({
   },
 });
 
-interface Board {
-  id: string;
-  name: string;
-  adminId: string;
-  columnNames: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export default function Myboards() {
-  const [boards, setBoards] = useState<Board[]>([]);
+  const [boards, setBoards] = useState<IBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
+  const [selectedBoard, setSelectedBoard] = useState<IBoard | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -77,7 +69,7 @@ export default function Myboards() {
       const response = await api.get("/boards");
       if (Array.isArray(response.data)) {
         const userBoards = response.data.filter(
-          (board) => board.adminId === user?.userId
+          (board) => board.adminId === user?.id
         );
         setBoards(userBoards);
       } else {
@@ -122,13 +114,13 @@ export default function Myboards() {
         }}
       >
         <Box>
-          <Typography 
-            variant="h4" 
-            sx={{ 
-              color: "#000000", 
+          <Typography
+            variant="h4"
+            sx={{
+              color: "#000000",
               fontWeight: 700,
               letterSpacing: "-0.5px",
-              mb: 2
+              mb: 2,
             }}
           >
             My Boards
@@ -137,75 +129,84 @@ export default function Myboards() {
       </Box>
 
       {loading ? (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '400px' 
-        }}>
-          <Typography sx={{ 
-            color: "#666666",
-            fontSize: '1.1rem'
-          }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "400px",
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#666666",
+              fontSize: "1.1rem",
+            }}
+          >
             Loading your boards...
           </Typography>
         </Box>
       ) : error ? (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '400px' 
-        }}>
-          <Typography color="error" sx={{ fontSize: '1.1rem' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "400px",
+          }}
+        >
+          <Typography color="error" sx={{ fontSize: "1.1rem" }}>
             {error}
           </Typography>
         </Box>
       ) : boards.length === 0 ? (
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '400px',
-            background: 'linear-gradient(to bottom, #ffffff, #f8fafa)',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "400px",
+            background: "linear-gradient(to bottom, #ffffff, #f8fafa)",
             borderRadius: 4,
             py: 8,
           }}
         >
-          <Box sx={{ 
-            width: 80, 
-            height: 80, 
-            bgcolor: '#f8fafa',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mb: 3
-          }}>
-            <MdAdd style={{ fontSize: '40px', color: '#666666' }} />
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              bgcolor: "#f8fafa",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 3,
+            }}
+          >
+            <MdAdd style={{ fontSize: "40px", color: "#666666" }} />
           </Box>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              color: "#000000", 
+          <Typography
+            variant="h5"
+            sx={{
+              color: "#000000",
               fontWeight: 600,
-              mb: 2
+              mb: 2,
             }}
           >
             No boards yet
           </Typography>
-          <Typography 
-            variant="body1" 
-            sx={{ 
+          <Typography
+            variant="body1"
+            sx={{
               color: "#666666",
               mb: 4,
-              textAlign: 'center',
-              maxWidth: '400px'
+              textAlign: "center",
+              maxWidth: "400px",
             }}
           >
-            Create your first board to start organizing your tasks and boost your productivity
+            Create your first board to start organizing your tasks and boost
+            your productivity
           </Typography>
         </Box>
       ) : (
@@ -219,53 +220,63 @@ export default function Myboards() {
                 >
                   <MdDelete />
                 </DeleteButton>
-                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
+                <CardContent
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    p: 3,
+                  }}
+                >
                   <Typography
                     variant="h6"
-                    sx={{ 
-                      color: "#000000", 
+                    sx={{
+                      color: "#000000",
                       fontWeight: 600,
-                      fontSize: '1.1rem',
-                      mb: 2 
+                      fontSize: "1.1rem",
+                      mb: 2,
                     }}
                   >
                     {board.name}
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ 
+                    sx={{
                       color: "#666666",
-                      mb: 'auto'
+                      mb: "auto",
                     }}
                   >
-                    {board.columnNames.join(" • ")}
+                    {board.columns.map(({ name }) => name).join(" • ")}
                   </Typography>
-                  <Box sx={{ 
-                    mt: 3, 
-                    pt: 2, 
-                    borderTop: '1px solid rgba(0,0,0,0.08)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
+                  <Box
+                    sx={{
+                      mt: 3,
+                      pt: 2,
+                      borderTop: "1px solid rgba(0,0,0,0.08)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <Typography
                       variant="caption"
-                      sx={{ 
+                      sx={{
                         color: "#999999",
-                        fontSize: '0.75rem'
+                        fontSize: "0.75rem",
                       }}
                     >
-                      Last updated: {new Date(board.updatedAt).toLocaleDateString()}
+                      Last updated:{" "}
+                      {new Date(board.updatedAt).toLocaleDateString()}
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ 
+                      sx={{
                         color: "#000000",
                         opacity: 0.5,
-                        fontSize: '0.75rem'
+                        fontSize: "0.75rem",
                       }}
                     >
-                      {board.columnNames.length} Columns
+                      {board.columns.length} Columns
                     </Typography>
                   </Box>
                 </CardContent>
@@ -275,25 +286,27 @@ export default function Myboards() {
         </Grid>
       )}
 
-      <Dialog 
-        open={deleteDialogOpen} 
+      <Dialog
+        open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         PaperProps={{
           sx: {
             borderRadius: 2,
-            boxShadow: '0 12px 24px rgba(0,0,0,0.1)',
-          }
+            boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
+          },
         }}
       >
-        <DialogTitle sx={{ 
-          pb: 1,
-          color: '#000000',
-          fontWeight: 600 
-        }}>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            color: "#000000",
+            fontWeight: 600,
+          }}
+        >
           Delete Board
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
-          <Typography sx={{ color: '#666666' }}>
+          <Typography sx={{ color: "#666666" }}>
             Are you sure you want to delete "{selectedBoard?.name}"? This action
             cannot be undone.
           </Typography>
@@ -301,23 +314,23 @@ export default function Myboards() {
         <DialogActions sx={{ p: 2.5, pt: 1.5 }}>
           <Button
             onClick={() => setDeleteDialogOpen(false)}
-            sx={{ 
+            sx={{
               color: "#666666",
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.05)'
-              }
+              "&:hover": {
+                bgcolor: "rgba(0, 0, 0, 0.05)",
+              },
             }}
           >
             Cancel
           </Button>
           <Button
             onClick={handleDeleteConfirm}
-            sx={{ 
+            sx={{
               color: "#ffffff",
-              bgcolor: '#ff3b30',
-              '&:hover': {
-                bgcolor: '#ff2d20'
-              }
+              bgcolor: "#ff3b30",
+              "&:hover": {
+                bgcolor: "#ff2d20",
+              },
             }}
             autoFocus
           >
