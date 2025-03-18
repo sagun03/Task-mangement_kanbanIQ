@@ -5,13 +5,25 @@ import BoardService from "../boards/boards.service";
 
 class TaskService {
   private userService: UserService;
-  private boardService: BoardService;
+  private boardService: BoardService | null = null;
   private emailService: EmailService;
 
   constructor() {
     this.userService = new UserService();
-    this.boardService = new BoardService();
     this.emailService = new EmailService();
+  }
+
+  private getBoardService(): BoardService {
+    if (!this.boardService) {
+      this.boardService = new BoardService();
+    }
+    return this.boardService;
+  }
+
+  // Update methods to use getBoardService()
+  private async getAdminIdForBoard(boardId: string): Promise<string | null> {
+    const boardService = this.getBoardService();
+    return await boardService.getAdminIdByBoardId(boardId);
   }
 
   public async getAllTasks(): Promise<ITask[]> {
@@ -153,9 +165,7 @@ class TaskService {
       );
 
       // Fetch the admin for the board
-      const adminId = await this.boardService.getAdminIdByBoardId(
-        task.boardOriginalId
-      );
+      const adminId = await this.getAdminIdForBoard(task.boardOriginalId);
       const adminUser = adminId
         ? await this.userService.getUserById(adminId)
         : null;
@@ -283,9 +293,7 @@ class TaskService {
         }
 
         // Fetch the admin for the board and notify
-        const adminId = await this.boardService.getAdminIdByBoardId(
-          updatedTask.boardOriginalId
-        );
+        const adminId = await this.getAdminIdForBoard(updatedTask.boardOriginalId);
 
         if (adminId && adminId !== updatedTask.assignedBy) {
           const adminUser = await this.userService.getUserById(adminId);
@@ -377,9 +385,7 @@ class TaskService {
         }
 
         // Fetch the admin for the board and notify
-        const adminId = await this.boardService.getAdminIdByBoardId(
-          deletedTask.boardOriginalId
-        );
+        const adminId = await this.getAdminIdForBoard(deletedTask.boardOriginalId);
         if (adminId) {
           const adminUser = await this.userService.getUserById(adminId);
 
@@ -502,9 +508,7 @@ class TaskService {
         }
 
         // Notify board admin (if applicable)
-        const adminId = await this.boardService.getAdminIdByBoardId(
-          updatedTask.boardOriginalId
-        );
+        const adminId = await this.getAdminIdForBoard(updatedTask.boardOriginalId);
         if (adminId) {
           const adminUser = await this.userService.getUserById(adminId);
 
@@ -563,6 +567,28 @@ class TaskService {
       return updatedTasks;
     } catch (error: any) {
       throw new Error("Error fetching tasks by board ID: " + error.message);
+    }
+  }
+
+  public async deleteTasksByBoardId(boardId: string): Promise<void> {
+    try {
+      // Find all tasks for this board
+      const tasks = await Task.find({ boardOriginalId: boardId });
+
+      // Remove task associations from users
+      for (const task of tasks) {
+        if (task.assignedTo) {
+          await this.userService.removeTaskFromUser(task.assignedTo, task._id.toString());
+        }
+      }
+
+      // Delete all tasks for this board
+      await Task.deleteMany({ boardOriginalId: boardId });
+      
+      console.log(`Deleted all tasks for board ${boardId}`);
+    } catch (error: any) {
+      console.error('Error deleting tasks:', error);
+      throw new Error(`Error deleting tasks for board ${boardId}: ${error.message}`);
     }
   }
 }

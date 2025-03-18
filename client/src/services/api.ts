@@ -2,7 +2,7 @@
 
 import { IBoard, ITask, IUser } from '../types/kanban';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://localhost:8082/api';
 
 export const fetchBoards = async (): Promise<IBoard[]> => {
   try {

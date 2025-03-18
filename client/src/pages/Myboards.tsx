@@ -83,7 +83,7 @@ export default function Myboards() {
     }
   };
 
-  const handleDeleteClick = (board: Board, event: React.MouseEvent) => {
+  const handleDeleteClick = (board: IBoard, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when clicking delete button
     setSelectedBoard(board);
     setDeleteDialogOpen(true);
@@ -92,13 +92,21 @@ export default function Myboards() {
   const handleDeleteConfirm = async () => {
     if (selectedBoard) {
       try {
+        setLoading(true);
         await api.delete(`/boards/${selectedBoard.id}`);
+        
+        // Update local state
         setBoards(boards.filter((board) => board.id !== selectedBoard.id));
         setDeleteDialogOpen(false);
         setSelectedBoard(null);
+        
+        // Show success message
+        toast("Board and all associated tasks have been deleted", "success");
       } catch (error) {
         console.error("Error deleting board:", error);
-        setError("Failed to delete board");
+        toast("Failed to delete board", "error");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -307,8 +315,13 @@ export default function Myboards() {
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <Typography sx={{ color: "#666666" }}>
-            Are you sure you want to delete "{selectedBoard?.name}"? This action
-            cannot be undone.
+            Are you sure you want to delete "{selectedBoard?.name}"? This will permanently delete:
+            <ul style={{ marginTop: '8px', marginBottom: '8px' }}>
+              <li>All tasks in this board</li>
+              <li>All board settings and configurations</li>
+              <li>All user associations with this board</li>
+            </ul>
+            This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2.5, pt: 1.5 }}>
