@@ -25,7 +25,6 @@ import { useAuth } from '../context/AuthContext';
 import api from '../config/axiosInstance';
 import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
-import { socketService } from '../services/Socket';
 
 interface Task {
   id?: string;
@@ -112,32 +111,6 @@ const MyTasks: React.FC = () => {
     fetchTasks();
   }, []);
 
-  // Add this useEffect for socket connection
-  useEffect(() => {
-    if (user?.userId) {
-      console.log('Initializing socket connection for user:', user.userId);
-      socketService.connect(user.userId);
-
-      socketService.onTaskUpdate((updatedTask) => {
-        console.log('📝 Received task update in MyTasks:', updatedTask);
-        setTasks(prevTasks => {
-          const newTasks = prevTasks.map(task => 
-            (task.id === updatedTask.id || task._id === updatedTask._id) 
-              ? updatedTask 
-              : task
-          );
-          console.log('Updated tasks state:', newTasks);
-          return newTasks;
-        });
-      });
-
-      return () => {
-        console.log('Cleaning up socket connection for user:', user.userId);
-        socketService.disconnect();
-      };
-    }
-  }, [user?.userId]);
-
   const fetchTasks = async () => {
     try {
       const response = await api.get('/tasks');
@@ -179,7 +152,6 @@ const MyTasks: React.FC = () => {
     setEditedPriority('');
   };
 
-  // Add this function after handleCancelEdit
   const handleSaveEdit = async (taskId: string) => {
     try {
       const updatedTaskData = {
@@ -192,9 +164,7 @@ const MyTasks: React.FC = () => {
       const response = await api.put(`/tasks/${taskId}`, updatedTaskData);
 
       if (response.status === 200) {
-        console.log('Task updated successfully:', response.data);
-        
-        // Update local state first
+        // Update local state
         setTasks(prevTasks => 
           prevTasks.map(task => 
             (task.id === taskId || task._id === taskId) 
@@ -202,8 +172,6 @@ const MyTasks: React.FC = () => {
               : task
           )
         );
-
-        // Socket event will be emitted from server
         handleCancelEdit();
       }
     } catch (error) {

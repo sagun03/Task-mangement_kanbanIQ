@@ -187,27 +187,21 @@ const BoardDetail: React.FC = () => {
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    // Dropped outside the list
-    if (!destination) {
+    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
       return;
     }
 
-    // Dropped in the same place
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-
-    // Update the task status
-    const task = tasks.find(
-      (t) => (t._id?.toString() || t.id?.toString()) === draggableId
-    );
+    const task = tasks.find(t => (t._id?.toString() || t.id?.toString()) === draggableId);
+    
     if (task) {
-      await updateTask(draggableId, {
-        status: destination.droppableId as "To Do" | "In Progress" | "Done",
-      });
+      try {
+        await updateTask(draggableId, {
+          status: destination.droppableId as "To Do" | "In Progress" | "Done",
+        });
+      } catch (error) {
+        console.error("Error updating task:", error);
+        toast("Failed to update task", "error");
+      }
     }
   };
 
