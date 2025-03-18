@@ -2,12 +2,21 @@ import BoardInvitationService from "../boardInvitation/boardInvitation.service";
 import EmailService from "../email/email.service";
 import { UserService } from "../user/user.service";
 import Board, { IBoard } from "./boards.model";
+import TaskService from "../tasks/tasks.service"; // Fixed import
 
 class BoardService {
   private userService: UserService;
+  private taskService: TaskService | null = null;
 
   constructor() {
     this.userService = new UserService();
+  }
+
+  private getTaskService(): TaskService {
+    if (!this.taskService) {
+      this.taskService = new TaskService();
+    }
+    return this.taskService;
   }
 
   /**
@@ -90,24 +99,33 @@ class BoardService {
   }
 
   /**
-   * ✅ Delete a board and remove users' associations
+   * ✅ Delete a board and all associated data
    */
   public async deleteBoardById(id: string): Promise<IBoard | null> {
     try {
+      // Get TaskService instance when needed
+      const taskService = this.getTaskService();
+      
+      // Delete all tasks associated with this board
+      await taskService.deleteTasksByBoardId(id);
+
+      // Then delete the board
       const deletedBoard = await Board.findByIdAndDelete(id);
+      if (!deletedBoard) {
+        return null;
+      }
 
-      if (deletedBoard) {
-        // 🔥 Call UserService to remove the board ID from the admin and invited users
-        await this.userService.removeBoardFromUser(deletedBoard.adminId, id);
-
-        for (const userId of deletedBoard.invitedUserIds) {
-          await this.userService.removeBoardFromUser(userId, id);
-        }
+      // Remove board from users' associations
+      await this.userService.removeBoardFromUser(deletedBoard.adminId, id);
+      for (const userId of deletedBoard.invitedUserIds) {
+        await this.userService.removeBoardFromUser(userId, id);
       }
 
       return deletedBoard;
+
     } catch (error: any) {
-      throw new Error("Error deleting board: " + error.message);
+      console.error('Error in deleteBoardById:', error);
+      throw new Error(`Error deleting board: ${error.message}`);
     }
   }
 
