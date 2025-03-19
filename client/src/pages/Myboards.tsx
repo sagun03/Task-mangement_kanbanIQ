@@ -213,7 +213,9 @@ export default function Myboards() {
         <Grid container spacing={3}>
           {boards.map((board) => (
             <Grid item xs={12} sm={6} md={4} key={board.id}>
-              <BoardCard>
+              <BoardCard
+               onClick={() => navigate(`/kanban-board/${board.id}`)}
+              >
                 <DeleteButton
                   onClick={(e) => handleDeleteClick(board, e)}
                   aria-label="delete"

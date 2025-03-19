@@ -7,13 +7,11 @@ import {
   Menu,
   MenuItem,
   IconButton,
-  InputBase,
   Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Paper,
   Badge,
   ListItem,
   Divider,
@@ -111,7 +109,7 @@ const Navbar = ({isSideBar = true}) => {
     { text: 'Dashboard', icon: MdHome, path: '/dashboard' },
     { text: 'My Boards', icon: MdTimeline, path: '/dashboard/myboards' },
     { text: 'Tasks', icon: MdFormatListBulleted, path: '/dashboard/tasks' },
-    { text: 'Team Collaboration', icon: MdGroups, path: '/dashboard/team' },
+    // { text: 'Team Collaboration', icon: MdGroups, path: '/dashboard/team' },
   ];
 
   const loadInvitations = async () => {

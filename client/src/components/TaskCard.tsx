@@ -134,7 +134,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index }) => {
   const commentsCount = task.comments?.length || 0;
   const taskId =
     task._id?.toString() || task.id?.toString() || index.toString();
-  const assignedUser = task.assignedByEmail?.toUpperCase();
+  const assignedUser = task.assignedToEmail?.toUpperCase();
 
   return (
     <Draggable draggableId={taskId} index={index}>

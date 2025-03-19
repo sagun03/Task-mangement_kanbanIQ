@@ -1,5 +1,6 @@
 import { Router } from "express";
 import BoardInvitationController from "./boardInvitation.controller";
+import { clearCacheMiddleware } from "../../middlewares/cacheMiddleware";
 
 const router = Router();
 const invitationController = BoardInvitationController.getInstance();
@@ -37,7 +38,7 @@ const invitationController = BoardInvitationController.getInstance();
  *       500:
  *         description: Internal server error
  */
-router.post("/accept", async (req, res) => {
+router.post("/accept", clearCacheMiddleware("boards:all"), async (req, res) => {
   try {
     await invitationController.acceptInvitation(req, res);
   } catch (error) {
