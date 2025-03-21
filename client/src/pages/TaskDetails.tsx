@@ -209,8 +209,8 @@ const TaskDetail: React.FC = () => {
           },
         ],
       });
+      setIsUpdated(true);
     }
-    setIsUpdated(true);
 
     setComment("");
   };
@@ -654,7 +654,7 @@ const TaskDetail: React.FC = () => {
                   type="submit"
                   // onClick={() => hahandleCommentSubmitndleEdit()}
                   sx={{ height: 40, mr: 2, width: 100 }}
-                  disabled={!comment.trim()}
+                  style={ (!comment.trim()) ? { cursor: "not-allowed" } : {} }
                 >
                   Comment
                 </ActionButton>

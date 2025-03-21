@@ -17,6 +17,7 @@ import {
   StyledTextField,
 } from "./styled/TaskFormElements";
 import { useAuth } from "../context/AuthContext";
+import LoadingOverlay from "./Loader";
 
 const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus = "To Do", board }) => {
     const { user } = useAuth();
@@ -206,6 +207,7 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
           </Button>
         </DialogActions>
       </form>
+      <LoadingOverlay loading={isSubmitting} />
     </StyledDialog>
   );
 };

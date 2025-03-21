@@ -99,10 +99,10 @@ const CreateBoard: React.FC = () => {
 
   return (
     <>
-      <div style={{ background: "#f8fafa", minHeight: "100vh" }}>
+      <div style={{ background: "#f8fafa", minHeight: "calc(100vh - 104px)" }}>
         <Container maxWidth="md">
           {/* Back Button */}
-          <Box sx={{ mt: 2, mb: 2, display: "flex", alignItems: "center" }}>
+          <Box sx={{ py: 2, display: "flex", alignItems: "center" }}>
             <IconButton
               onClick={() => navigate("/dashboard")}
               sx={{ color: "#0e182b", mr: 1 }}

@@ -57,6 +57,7 @@ const TaskCard = styled(Card)({
   boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
   borderRadius: "16px",
   border: "none",
+  cursor: "pointer",
   "&:hover": {
     transform: "translateY(-4px)",
     boxShadow: "0 12px 24px rgba(0,0,0,0.08)",
@@ -292,6 +293,7 @@ const MyTasks: React.FC = () => {
         <Grid container spacing={3}>
           {tasks.map((task) => (
             <Grid item xs={12} sm={6} md={4} key={task.id}>
+<<<<<<< HEAD
               <TaskCard>
                 <EditButton
                   onClick={() => handleStartEdit(task)}
@@ -299,6 +301,9 @@ const MyTasks: React.FC = () => {
                 >
                   <MdEdit />
                 </EditButton>
+=======
+              <TaskCard onClick={() => navigate(`/kanban-board/tasks/${task.id}`)}>
+>>>>>>> 809f8b32e89f317cb5517c445ca024250cfef6e8
                 <DeleteButton
                   onClick={(e) => {
                     e.stopPropagation();
