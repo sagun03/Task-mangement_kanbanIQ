@@ -1,222 +1,369 @@
-import type React from "react"
-import { Box, Button, Card, CardContent, Container, Grid, Typography } from "@mui/material"
-import { MdPerson, MdDragIndicator } from "react-icons/md"
-import { FaDatabase, FaGithub, FaLayerGroup, FaLinkedin, FaTwitter } from "react-icons/fa"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Button as MUIButton,
+  Container,
+  Box,
+  Typography,
+  Grid,
+  Paper,
+} from "@mui/material";
+import { ArrowRight, CheckCircle } from "lucide-react";
+import styled from "styled-components";
+import { useAuth } from "../context/AuthContext";
+import { FaLayerGroup } from "react-icons/fa";
 
-const LandingPage: React.FC = () => {
+// Styled components for Material-UI
+const HeroSection = styled(Box)`
+  position: relative;
+  background: linear-gradient(to top right, #f0f4fa, #ffffff);
+  text-align: left;
+  min-height: 80vh;
+  display: flex;
+`;
+const KanbanCard = styled(Box)`
+  position: relative;
+  width: 100%;
+  height: 380px; /* Increased height */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px; /* Slightly larger border-radius */
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
+    rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
+  border: 1px solid #ccc; /* Softer border */
+  background: linear-gradient(to top right, rgba(0, 0, 255, 0.05), #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+const Overlay = styled(Box)`
+  position: absolute;
+  inset: 0;
+background: linear-gradient(to top right, rgba(32, 150, 243, 0.2), #ffffff);
+`;
 
-    const iconStyle = { fontSize: "24px", marginRight: "8px" }
+const AssistantCard = styled(Box)`
+  position: absolute;
+  bottom: -24px;
+  right: -24px;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ddd;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease-in-out;
+  gap: 12px;
+`;
 
+const AiBadge = styled(Box)`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e9effd;
+  color: #2562ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+`;
+const fadeInScale = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay: 0.3 } },
+};
+
+const Section = styled(Box)({
+  padding: "6rem",
+  backgroundColor: "#F5F8FA",
+  minHeight: "80vh",
+});
+
+const FeatureCard = styled(Box)({
+  padding: "1.5rem",
+  backgroundColor: "#fff",
+  width: "450px",
+  borderRadius: "20px",
+  minHeight: "150px",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+  transition: "all 0.3s ease-in-out",
+  "&:hover": {
+    boxShadow: "0 4px 12px rgba(0, 0, 2, 0.20)",
+    transform: "scale(1.02)",
+  },
+});
+
+const FeatureIcon = styled(Box)({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "32px",
+  height: "32px",
+  borderRadius: "50%",
+  backgroundColor: "rgba(33, 150, 243, 0.1)", // Adjust to match your primary color
+  color: "#2196F3", // Adjust to match primary
+});
+
+const features = [
+  {
+    title: "Intuitive Drag & Drop",
+    description:
+      "Move tasks between columns with smooth drag and drop interactions",
+  },
+  {
+    title: "AI Task Assistant",
+    description:
+      "Smart chatbot that helps you manage and find information about your tasks",
+  },
+  {
+    title: "Beautiful UI",
+    description:
+      "Elegant and minimalist design inspired by modern design principles",
+  },
+  {
+    title: "Task Categorization",
+    description: "Organize tasks with tags, priorities, and due dates",
+  },
+  {
+    title: "Real-time Updates",
+    description:
+      "See changes to your tasks in real-time as you move and edit them",
+  },
+  {
+    title: "Task Search",
+    description: "Quickly find tasks with powerful search functionality",
+  },
+];
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: any) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" },
+  }),
+};
+
+const LandingPage = () => {
+  const { isAuthenticated } = useAuth();
   return (
-    <Box sx={{ flexGrow: 1 }}>
-
-      {/* Hero Section */}
-      <Container maxWidth="md" sx={{ textAlign: "center", mt: 8, mb: 8 }}>
-        <Typography variant="h2" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
-          Manage Tasks with Intelligence
-        </Typography>
-        <Typography variant="subtitle1" sx={{ mb: 4 }}>
-          KanbanIQ combines AI-powered insights with intuitive task management to supercharge your team's productivity
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "black",
-            color: "white",
-            px: 3,
-            py: 1.5,
-            "&:hover": {
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-            },
-            borderRadius: 0,
-          }}
-        >
-          Get Started for Free
-        </Button>
-
-        {/* Placeholder for Animation */}
-        <Box
-          sx={{
-            mt: 6,
-            height: 250,
-            backgroundColor: "#f5f5f5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            AI-powered Task Management Animation
-          </Typography>
-        </Box>
-      </Container>
-
-      {/* Features Section */}
-      <Container maxWidth="md" sx={{ mb: 8 }}>
-        <Typography variant="h4" component="h2" sx={{ fontWeight: "bold", textAlign: "center", mb: 6 }}>
-          Core Features
-        </Typography>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ height: "100%", border: "1px solid #eee", boxShadow: "none", borderRadius: 0 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-                    <MdPerson style={iconStyle} />
-                    User Authentication
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Secure role-based access control and user management
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card sx={{ height: "100%", border: "1px solid #eee", boxShadow: "none", borderRadius: 0 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <MdDragIndicator style={iconStyle} />
-                  <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-                    Drag-and-Drop
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Intuitive task management with drag-and-drop functionality
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card sx={{ height: "100%", border: "1px solid #eee", boxShadow: "none", borderRadius: 0 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <FaDatabase style={iconStyle} />
-                  <Typography variant="h6" component="div" sx={{ fontWeight: "bold" }}>
-                    CRUD Operations
-                  </Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  Seamlessly create, read, update and delete tasks and boards
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
-
-      {/* Footer Section */}
-      <Box sx={{ bgcolor: "black", color: "white", pt: 6, pb: 4 }}>
-        <Container maxWidth="lg">
-          <Grid container spacing={0}>
-            {/* Logo and Description */}
-            <Grid item xs={12} md={3}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <FaLayerGroup style={{ fontSize: "26px", color: "white", marginRight: "10px" }} />
-                <Typography variant="h6" sx={{ color: "white" }}>
-                  KanbanIQ
-                </Typography>
-              </Box>
-            </Grid>
-
-            {/* Product Links */}
-            <Grid item xs={12} sm={6} md={3} sx={{ justifyContent: "center" }}>
-              
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {["Features", "Pricing", "API"].map((item) => (
-                  <Button
-                    key={item}
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      justifyContent: "flex-start",
-                      p: 0,
-                      "&:hover": { color: "white" },
-                    }}
-                  >
-                    {item}
-                  </Button>
-                ))}
-              </Box>
-            </Grid>
-
-            {/* Company Links */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {["About", "Blog", "Careers"].map((item) => (
-                  <Button
-                    key={item}
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      justifyContent: "flex-start",
-                      p: 0,
-                      "&:hover": { color: "white" },
-                    }}
-                  >
-                    {item}
-                  </Button>
-                ))}
-              </Box>
-            </Grid>
-
-            {/* Legal Links */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {["Privacy", "Terms", "Security"].map((item) => (
-                  <Button
-                    key={item}
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      justifyContent: "flex-start",
-                      p: 0,
-                      "&:hover": { color: "white" },
-                    }}
-                  >
-                    {item}
-                  </Button>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-
-          {/* Bottom Section */}
+    <Box display="flex" flexDirection="column" mt={"64px"} minHeight="100vh">
+      <main style={{ flex: 1 }}>
+        {/* Hero Section */}
+        <HeroSection>
+          {/* <Container> */}
           <Box
             sx={{
-              mt: 8,
-              pt: 4,
-              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
               display: "flex",
-              justifyContent: "space-between",
+              flexDirection: { xs: "column", md: "row" },
               alignItems: "center",
-              flexWrap: "wrap",
-              gap: 2,
+              justifyContent: "center",
+              margin: "auto",
+              px: ".6rem",
+              maxWidth: "1500px",
+              gap: 10, // Replacing Grid spacing
             }}
           >
-            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-              © 2025 KanbanIQ. All rights reserved.
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              {[FaTwitter, FaGithub, FaLinkedin].map((Icon, index) => (
-                <Button
-                  key={index}
-                  sx={{
-                    minWidth: "auto",
-                    p: 1,
-                    color: "rgba(255, 255, 255, 0.7)",
-                    "&:hover": { color: "white" },
-                  }}
+            {/* Left Section */}
+            <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={fadeIn}
+                custom={0}
+              >
+                <Typography variant="h2" fontWeight="bold" gutterBottom>
+                  Organize your tasks with elegance
+                </Typography>
+                <Typography variant="h5" color="textSecondary">
+                  A beautiful Kanban board with AI assistance to help you manage
+                  your workflow.
+                </Typography>
+
+                <Box
+                  mt={4}
+                  display="flex"
+                  gap={2}
+                  justifyContent={{ xs: "center", md: "flex-start" }}
                 >
-                  <Icon size={20} />
-                </Button>
-              ))}
+                  <MUIButton
+                    variant="contained"
+                    size="large"
+                    sx={{
+                      background: "black",
+                      borderRadius: 2,
+                      color: "white",
+                    }}
+                    component={Link}
+                    to={isAuthenticated ? "/dashboard" : "/login"}
+                    endIcon={<ArrowRight size={20} />}
+                  >
+                    Get Started
+                  </MUIButton>
+                  {!isAuthenticated && (
+                    <MUIButton
+                      variant="outlined"
+                      size="large"
+                      sx={{ color: "black" }}
+                      component={Link}
+                      to="/login"
+                    >
+                      Log in
+                    </MUIButton>
+                  )}
+                </Box>
+              </motion.div>
             </Box>
+
+            {/* Right Section */}
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                justifyContent: "center",
+                position: "relative",
+              }}
+            >
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={fadeInScale}
+              >
+                {/* Kanban Card */}
+                <KanbanCard >
+                  <Overlay />
+                  <Typography
+                    variant="h5"
+                    color="textSecondary"
+                    fontWeight="500"
+                  >
+                    Interactive Kanban Board
+                  </Typography>
+                </KanbanCard>
+
+                {/* AI Assistant Card */}
+                <AssistantCard
+                
+                  // sx={{ position: "absolute", bottom: -20, right: -20 }}
+                >
+                  <AiBadge>AI</AiBadge>
+                  <Box>
+                    <Typography variant="body2" fontWeight="600">
+                      AI Assistant
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      Ask me anything about your tasks
+                    </Typography>
+                  </Box>
+                </AssistantCard>
+              </motion.div>
+            </Box>
+          </Box>
+
+          {/* </Container> */}
+        </HeroSection>
+
+        {/* Features Section */}
+        <Section>
+          {/* <Container> */}
+          <Box textAlign="center" mb={6}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Powerful Features
+            </Typography>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              maxWidth="600px"
+              margin="auto"
+            >
+              Everything you need to organize your tasks and boost productivity
+            </Typography>
+          </Box>
+
+          <Grid container spacing={8}>
+            {features.map((feature, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <motion.div
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  variants={fadeIn}
+                  custom={index * 0.2}
+                >
+                  <FeatureCard>
+                    <Box display="flex" alignItems="center" gap={2} mb={2}>
+                      <FeatureIcon>
+                        <CheckCircle fontSize="small" />
+                      </FeatureIcon>
+                      <Typography style={{ fontWeight: 550 }} variant="h6">
+                        {feature.title}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      style={{ textAlign: "left" }}
+                      color="text.secondary"
+                    >
+                      {feature.description}
+                    </Typography>
+                  </FeatureCard>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+          {/* </Container> */}
+        </Section>
+
+        {/* CTA Section */}
+        <Box py={10} height={"50vh"} sx={{ display: "flex" }}>
+          <Container>
+            <Paper
+              elevation={3}
+              sx={{ p: 6, textAlign: "center", borderRadius: 3 }}
+            >
+              <Typography variant="h3" fontWeight="bold" gutterBottom>
+                Ready to get organized?
+              </Typography>
+              <Typography variant="h6" color="textSecondary" mb={4}>
+                Start managing your tasks with our beautiful Kanban board today.
+              </Typography>
+              <MUIButton
+                variant="contained"
+                size="large"
+                sx={{ background: "black", borderRadius: 2, color: "white" }}
+                component={Link}
+                to={isAuthenticated ? "/dashboard" : "/signup"}
+                endIcon={<ArrowRight size={20} />}
+              >
+                Get Started
+              </MUIButton>
+            </Paper>
+          </Container>
+        </Box>
+      </main>
+
+      {/* Footer */}
+      <Box py={4} borderTop="1px solid #ddd">
+        <Container>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Box display="flex" alignItems="center">
+              <FaLayerGroup style={{ marginRight: "10px" }} />
+              <Typography variant="h6" fontWeight="bold">
+                Kanboard
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="textSecondary">
+              &copy; {new Date().getFullYear()} Kanboard. All rights reserved.
+            </Typography>
           </Box>
         </Container>
       </Box>
     </Box>
-  )
-}
+  );
+};
 
-export default LandingPage
+export default LandingPage;

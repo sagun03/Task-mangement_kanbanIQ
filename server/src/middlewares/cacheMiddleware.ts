@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import redisClient from "../config/redisclient";
+import redisClient from "../config/redisClient";
 
 // Middleware to check cache
 export const cacheMiddleware = (cacheKey: string) => async (req: Request, res: Response, next: NextFunction) => {

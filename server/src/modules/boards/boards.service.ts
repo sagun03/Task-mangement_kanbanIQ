@@ -126,10 +126,23 @@ class BoardService {
     }
   }
 
-  async partialUpdateBoard(id: string, updateData: Partial<any>) {
+  async partialUpdateBoard(id: string, updateData: Partial<IBoard>) {
     try {
       const updatedBoard = await Board.findByIdAndUpdate(id, updateData, { new: true });
-
+      if (updatedBoard && updateData.invitedUserIds
+        && updateData.invitedUserIds.length > 0
+      ) {
+         // Lazy load BoardInvitationService
+      const { default: BoardInvitationService } = await import(
+        "../boardInvitation/boardInvitation.service"
+      );
+      const boardInvitationService = new BoardInvitationService();
+      // Send invitations to invited users
+      for (const userId of updatedBoard.invitedUserIds) {
+        // Delegate invitation logic to BoardInvitationService
+        await boardInvitationService.createInvitation(updatedBoard.id, userId);
+      }
+      }
       if (!updatedBoard) {
         return null;
       }

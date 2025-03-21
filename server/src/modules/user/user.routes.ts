@@ -1,7 +1,7 @@
 import express from "express";
 import UserController from "./user.controller";
 import { cacheMiddleware } from "../../middlewares/cacheMiddleware";
-import redisClient from "../../config/redisclient";
+import redisClient from "../../config/redisClient";
 
 const router = express.Router();
 const userController = UserController.getInstance();

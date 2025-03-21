@@ -5,7 +5,7 @@ const PublicLayout = () => {
   console.log("PublicLayout");
   return (
     <div>
-      <Navbar />
+      <Navbar isSideBar={false}/>
       <Outlet />
     </div>
   );

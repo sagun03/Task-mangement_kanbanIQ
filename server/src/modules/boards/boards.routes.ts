@@ -1,7 +1,7 @@
 import express from "express";
 import BoardController from "./boards.controller";
 import { cacheMiddleware, clearCacheMiddleware } from "../../middlewares/cacheMiddleware";
-import redisClient from "../../config/redisclient";
+import redisClient from "../../config/redisClient";
 
 const router = express.Router();
 const boardController = BoardController.getInstance();
@@ -198,7 +198,7 @@ router.delete("/:id", clearCacheMiddleware("boards:all"), async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/fetchByIds", async (req, res) => {
+router.get("/fetchByIds", clearCacheMiddleware("boards:all"), async (req, res) => {
   await boardController.getBoardsByIds(req, res);
 });
 

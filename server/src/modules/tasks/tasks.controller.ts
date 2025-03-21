@@ -139,9 +139,6 @@ public async getTasksByBoardId(req: Request, res: Response) {
   const { boardId } = req.params;
   try {
     const tasks = await this.taskService.getTasksByBoardId(boardId);
-    if (!tasks.length) {
-      return res.status(404).json({ message: "No tasks found for this board" });
-    }
     return res.status(200).json(tasks);
   } catch (error) {
     return res.status(500).json({ message: "Error fetching tasks by board ID", error });
