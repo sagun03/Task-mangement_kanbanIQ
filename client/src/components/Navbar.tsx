@@ -141,7 +141,7 @@ const Navbar = ({isSideBar = true}) => {
 
 console.log("isAuthenticated", isAuthenticated)
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex"}} px="1rem">
       {/* Sidebar: Only show when authenticated */}
       {isSideBar && (isAuthenticated || !isHomePage ) && (
         <StyledDrawer variant="permanent">

@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   Grid,
-  Container,
   Chip,
   Button,
   IconButton,
@@ -15,21 +14,13 @@ import {
   DialogActions
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { MdAdd, MdArrowBack, MdDelete } from 'react-icons/md';
+import { MdAdd, MdDelete } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import api from '../config/axiosInstance';
 import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  dueDate: string;
-  priority: string;
-  boardOriginalId: string;
-}
+import { useKanban } from '../context/KanbanContext';
+import { ITask } from '../types/kanban';
 
 // Add a type for valid status values
 type TaskStatus = 'To Do' | 'In Progress' | 'Completed';
@@ -68,12 +59,13 @@ const DeleteButton = styled(IconButton)({
 });
 
 const MyTasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<ITask | null>(null);
   const navigate = useNavigate();
+  const { getTasksByUserId } = useKanban();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -82,8 +74,8 @@ const MyTasks: React.FC = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await api.get('/tasks');
-      setTasks(response.data);
+      const response = await getTasksByUserId(user.id);
+      setTasks(response)
     } catch (error) {
       console.error('Error fetching tasks:', error);
       setError('Failed to fetch tasks');
@@ -333,7 +325,7 @@ const MyTasks: React.FC = () => {
             Cancel
           </Button>
           <Button
-            onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}
+            onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id!)}
             sx={{
               bgcolor: '#dc2626',
               color: 'white',

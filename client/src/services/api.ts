@@ -30,6 +30,19 @@ export const fetchBoardById = async (boardId: string): Promise<IBoard | null> =>
   }
 };
 
+export const fetchAllTasks = async (): Promise<ITask[]> => {
+  try {
+    const response = await fetch(`${API_URL}/tasks`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch board');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching tasks:`, error);
+    return [];
+  }
+};
+
 export const fetchTasks = async (boardId?: string): Promise<ITask[]> => {
   try {
     if (boardId) {
