@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   Grid,
-  Container,
   Chip,
   Button,
   IconButton,
@@ -20,24 +19,20 @@ import {
   InputLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { MdAdd, MdArrowBack, MdDelete, MdEdit } from 'react-icons/md';
+import { MdAdd, MdArrowBack, MdDelete } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import api from '../config/axiosInstance';
 import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
 
 interface Task {
-  id?: string;
-  _id?: string;  // Add MongoDB id
+  id: string;
   title: string;
   description: string;
   status: string;
   dueDate: string;
   priority: string;
   boardOriginalId: string;
-  assignedTo: string;
-  assignedBy: string;
-  createdBy: string;
 }
 
 // Add a type for valid status values
@@ -95,17 +90,13 @@ const EditButton = styled(IconButton)({
 });
 
 const MyTasks: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [editedTitle, setEditedTitle] = useState('');
-  const [editedDescription, setEditedDescription] = useState('');
-  const [editedStatus, setEditedStatus] = useState('');
-  const [editedPriority, setEditedPriority] = useState('');
   const navigate = useNavigate();
+  const { getTasksByUserId } = useKanban();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -114,8 +105,8 @@ const MyTasks: React.FC = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await api.get('/tasks');
-      setTasks(response.data);
+      const response = await getTasksByUserId(user.id);
+      setTasks(response)
     } catch (error) {
       console.error('Error fetching tasks:', error);
       setError('Failed to fetch tasks');
@@ -420,7 +411,7 @@ const MyTasks: React.FC = () => {
             Cancel
           </Button>
           <Button
-            onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}
+            onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id!)}
             sx={{
               bgcolor: '#dc2626',
               color: 'white',

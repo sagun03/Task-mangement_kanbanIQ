@@ -16,6 +16,7 @@ import {
   createTask,
   updateBoard,
   removeTask,
+  fetchAllTasks,
 } from "../services/api";
 
 interface KanbanContextType {
@@ -31,7 +32,7 @@ interface KanbanContextType {
   addTask: (taskData: Partial<ITask>) => Promise<ITask | null>;
   addColumn: (boardId: string, columnName: string) => Promise<void>;
   getTasksByStatus: (status: string) => ITask[];
-  getUserById: (userId: string) => IUser | undefined;
+  getUserById: (userId: string) => Promise<IUser | undefined>;
   updateColumnName: (
     boardId: string,
     columnId: string,
@@ -39,6 +40,9 @@ interface KanbanContextType {
   ) => Promise<void>;
   deleteColumn: (boardId: string, columnId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<boolean>;
+  searchTasks: (query: string, task: ITask[]) => Promise<ITask[]>;
+  getTasksByUserId: (taskId: string) => Promise<ITask[]>;
+  getTasksByStatusByUserId: (tasks: ITask[], status: string[]) => Promise<ITask[]>;
 }
 
 const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
@@ -60,7 +64,6 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const boardId =
         currentBoard?._id?.toString() || currentBoard?.id?.toString();
-      console.log("Current board ID for refresh:", boardId);
 
       // Fetch boards and users in parallel
       const [boardsData, usersData] = await Promise.all([
@@ -73,9 +76,7 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
 
       // Only fetch tasks if we have a current board
       if (boardId) {
-        console.log("Fetching tasks for board ID:", boardId);
         const tasksData = await fetchTasks(boardId);
-        console.log("Received tasks:", tasksData);
 
         if (Array.isArray(tasksData)) {
           setTasks(tasksData);
@@ -84,7 +85,6 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
           setTasks([]);
         }
       } else {
-        console.log("No current board ID, not fetching tasks");
         setTasks([]);
       }
     } catch (err) {
@@ -97,10 +97,6 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
-    if (currentBoard) {
-      console.log("Board changed, refreshing data for:", currentBoard.name);
-      console.log("Board ID:", currentBoard._id || currentBoard.id);
-    }
     refreshData();
   }, [currentBoard?._id, currentBoard?.id]);
 
@@ -131,14 +127,25 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const getTasksByUserId = async (userId: string) => {
+    if (tasks.length === 0) {
+      const fetchedTasks = await fetchAllTasks(); // Use a different variable name
+      return fetchedTasks.filter((task) => task.assignedTo === userId); // Use filter instead of map
+    }
+
+    return tasks.filter((task) => task.assignedTo === userId);
+  };
+
   const deleteTask = async (taskId: string): Promise<boolean> => {
     try {
       const isDeleted = await removeTask(taskId);
       if (isDeleted) {
-        setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
-  
+        setTasks((currentTasks) =>
+          currentTasks.filter((task) => task.id !== taskId)
+        );
+
         toast(`Task deleted successfully`, "success", "Task removed");
-  
+
         return true;
       }
       throw new Error("Failed to delete task");
@@ -175,8 +182,8 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
         { id: crypto.randomUUID(), name: columnName },
       ];
 
-       // API call
-       const updatedBoard = await updateBoard(boardId, {
+      // API call
+      const updatedBoard = await updateBoard(boardId, {
         columns: updatedColumns,
       });
 
@@ -187,8 +194,6 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentBoard((prev) =>
         prev ? { ...prev, columns: updatedColumns } : null
       );
-
-     
 
       toast(
         `New column "${columnName}" has been added`,
@@ -240,31 +245,46 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const searchTasks = (query: string, tasks: ITask[]) => {
+    const lowerCaseQuery = query.toLowerCase();
+    return tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(lowerCaseQuery) ||
+        task?.description?.toLowerCase().includes(lowerCaseQuery)
+    );
+  };
+
   const getTasksByStatus = (status: string) => {
     const boardId =
       currentBoard?._id?.toString() || currentBoard?.id?.toString();
-    console.log(`Filtering tasks for status: ${status}, board: ${boardId}`);
-    console.log(`Total tasks: ${tasks.length}`);
 
     const filteredTasks = tasks.filter((task) => {
       const taskBoardId = task.boardOriginalId?.toString();
       const matchesStatus = task.status === status;
       const matchesBoard = !boardId || taskBoardId === boardId;
 
-      console.log(
-        `Task: ${task.title}, Status: ${task.status}, BoardId: ${taskBoardId}`
-      );
-      console.log(`Matches: ${matchesStatus && matchesBoard}`);
-
       return matchesStatus && matchesBoard;
     });
 
-    console.log(`Filtered tasks for ${status}:`, filteredTasks.length);
     return filteredTasks;
   };
 
   const getUserById = (userId: string) => {
     return users.find((user) => user.userId === userId);
+  };
+
+  const getTasksByStatusByUserId = (tasks: ITask[], statuses: string[]) => {
+  
+    return tasks.filter((task) => {
+      const taskStatus = task.status.toLowerCase().trim();
+  
+      const match = statuses.some((status) => {
+        const formattedStatus = status.toLowerCase().trim();
+        return taskStatus === formattedStatus;
+      });
+  
+      return match;
+    });
   };
 
   const deleteColumn = async (boardId: string, columnId: string) => {
@@ -312,7 +332,10 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     getUserById,
     updateColumnName,
     deleteColumn,
-    deleteTask
+    deleteTask,
+    searchTasks,
+    getTasksByUserId,
+    getTasksByStatusByUserId
   };
 
   return (

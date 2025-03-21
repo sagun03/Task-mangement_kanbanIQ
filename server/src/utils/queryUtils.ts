@@ -13,4 +13,3 @@ export const parseIdsFromQuery = (ids: string | string[] | any): string[] => {
     // If ids is invalid, return an empty array or throw an error
     return [];
   }
-  

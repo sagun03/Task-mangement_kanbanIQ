@@ -31,6 +31,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.get('/health', (req, res) => {
   res.status(200).send('Server is running');
 });
+app.use(express.json());
+app.use('/api', router); 
 
 setupSwagger(app);
 

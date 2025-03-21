@@ -3,6 +3,7 @@ import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Box, CircularProgress } from "@mui/material";
 import Navbar from "../components/Navbar";
+import RagChatDrawer from "../components/RagChat/RagChatDrawer";
 
 // Lazy load the Sidebar and Navbar components
 
@@ -27,6 +28,7 @@ const PrivateLayout = ({ isSideBar = true }) => {
           <Outlet />
         </Box>
       </React.Suspense>
+      <RagChatDrawer />
     </div>
   ) : (
     <Navigate to="/login" />
