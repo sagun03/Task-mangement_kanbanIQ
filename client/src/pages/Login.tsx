@@ -13,7 +13,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  CircularProgress,
 } from "@mui/material";
 import { FcGoogle } from "react-icons/fc";
 import { HiEye, HiEyeOff } from "react-icons/hi";
@@ -36,6 +35,7 @@ import {
   OAuthButtons,
   OAuthButton,
 } from "../styles/login";
+import DOMPurify from "dompurify";
 import { useToast } from "../context/ToastProvider";
 import LoadingOverlay from "../components/Loader";
 
@@ -110,7 +110,22 @@ const Login: React.FC = () => {
             >
               <StyledTextField
                 fullWidth
-                placeholder="Email"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label={
+                  <>
+                    Email <span style={{ color: "red" }}>*</span>
+                  </>
+                }
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
@@ -130,7 +145,22 @@ const Login: React.FC = () => {
               />
 
               <StyledTextField
-                placeholder="Password"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label={
+                  <>
+                    Password <span style={{ color: "red" }}>*</span>
+                  </>
+                }
                 fullWidth
                 type={showPassword ? "text" : "password"}
                 {...register("password", {

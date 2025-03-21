@@ -201,7 +201,7 @@ const MyTasks: React.FC = () => {
               maxWidth: '400px'
             }}
           >
-            Create your first task to start tracking your work
+            No Tasks is assigned to you yet. Create a new task to get started.
           </Typography>
         </Box>
       ) : (

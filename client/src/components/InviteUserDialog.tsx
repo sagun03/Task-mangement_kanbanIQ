@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { IBoard, IUser } from "../types/kanban";
+import LoadingOverlay from "./Loader";
 
 interface InviteUserDialogProps {
   open: boolean;
@@ -111,6 +112,7 @@ console.log("board", board);
           </Button>
         </DialogActions>
       </form>
+      <LoadingOverlay loading={isSubmitting} />
     </Dialog>
   );
 };

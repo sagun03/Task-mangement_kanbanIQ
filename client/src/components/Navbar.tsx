@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AppBar,
   Toolbar,
@@ -21,12 +22,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaLayerGroup } from "react-icons/fa";
 import {
-  MdSearch,
   MdNotifications,
   MdHome,
   MdTimeline,
   MdFormatListBulleted,
-  MdGroups,
   MdLogout,
 } from "react-icons/md";
 import { useEffect, useState } from "react";
@@ -160,6 +159,7 @@ console.log("isAuthenticated", isAuthenticated)
                     backgroundColor: 'rgba(14, 24, 43, 0.04)',
                   },
                 }}
+                onClick={() => navigate("/dashboard")}
               >
                 <ListItemIcon>
                   <FaLayerGroup
