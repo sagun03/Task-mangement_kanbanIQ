@@ -9,7 +9,6 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
-  CircularProgress,
 } from "@mui/material";
 import {
   Wrapper,

@@ -18,6 +18,7 @@ import { MdAdd, MdDelete } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 import api from "../config/axiosInstance";
 import { IBoard } from "../types/kanban";
+import SomethingWentWrong from "../components/Error";
 
 const BoardCard = styled(Card)({
   height: 220,
@@ -83,7 +84,7 @@ export default function Myboards() {
     }
   };
 
-  const handleDeleteClick = (board: Board, event: React.MouseEvent) => {
+  const handleDeleteClick = (board: IBoard, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when clicking delete button
     setSelectedBoard(board);
     setDeleteDialogOpen(true);
@@ -155,9 +156,7 @@ export default function Myboards() {
             minHeight: "400px",
           }}
         >
-          <Typography color="error" sx={{ fontSize: "1.1rem" }}>
-            {error}
-          </Typography>
+          <SomethingWentWrong />
         </Box>
       ) : boards.length === 0 ? (
         <Box
@@ -213,9 +212,7 @@ export default function Myboards() {
         <Grid container spacing={3}>
           {boards.map((board) => (
             <Grid item xs={12} sm={6} md={4} key={board.id}>
-              <BoardCard
-               onClick={() => navigate(`/kanban-board/${board.id}`)}
-              >
+              <BoardCard onClick={() => navigate(`/kanban-board/${board.id}`)}>
                 <DeleteButton
                   onClick={(e) => handleDeleteClick(board, e)}
                   aria-label="delete"

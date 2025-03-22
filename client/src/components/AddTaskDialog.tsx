@@ -47,6 +47,7 @@ const AddTaskDialog = ({
       boardOriginalId: boardId,
       assignedBy: user.id,
       createdBy: user.id,
+      dueDate: "",
     },
   });
 
@@ -159,9 +160,13 @@ const AddTaskDialog = ({
             <FormHelperText>{errors.priority?.message}</FormHelperText>
           </FormControl>
 
-          <label style={{ color: "black" }}>Due Date</label>
+          <label style={{ color: "black" }}>Due Date <Typography component="span" color="error">
+              *
+            </Typography></label>
+            <FormControl fullWidth error={!!errors.dueDate} sx={{ borderColor: "black" }}>
           <Controller
             name="dueDate"
+            rules={{ required: "Due Date is required" }}
             control={control}
             render={({ field }) => (
               <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -183,6 +188,8 @@ const AddTaskDialog = ({
               </LocalizationProvider>
             )}
           />
+          <FormHelperText>{errors.dueDate?.message}</FormHelperText>
+        </FormControl>
 
           <label style={{ color: "black" }}>
             Assign To{" "}

@@ -20,7 +20,6 @@ import { format } from "date-fns";
 import { Trash2 } from "lucide-react";
 import styled from "styled-components";
 import { useKanban } from "../context/KanbanContext";
-import { ITask } from "../types/kanban";
 import { fetchTaskById } from "../services/api";
 import { ActionButton } from "./KanbanBoard";
 import { Close, Edit } from "@mui/icons-material";
@@ -28,6 +27,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useAuth } from "../context/AuthContext";
 import LoadingOverlay from "../components/Loader";
+import SomethingWentWrong from "../components/Error";
 
 // Styled Components
 const TaskDetailContainer = styled(Container)`
@@ -106,9 +106,17 @@ const EditContainer = styled(Box)`
 const TaskDetail: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
-  const { users, boards, loading, updateTask, deleteTask } = useKanban();
+  const {
+    users,
+    boards,
+    loading,
+    updateTask,
+    deleteTask,
+    task,
+    setTask,
+    error,
+  } = useKanban();
   const { user } = useAuth();
-  const [task, setTask] = useState<ITask | null>(null);
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<string>("");
   const [priority, setPriority] = useState<string>("");
@@ -119,10 +127,25 @@ const TaskDetail: React.FC = () => {
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [isUpdated, setIsUpdated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taskError, setTaskError] = useState("");
 
   const fetchTask = async () => {
-    const task = await fetchTaskById(taskId);
-    setTask(task);
+    try {
+      const task = await fetchTaskById(taskId);
+      setTask(task);
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      setTaskError("Failed to fetch task details");
+    }
+  };
+
+  useEffect(() => {
+    if (error) {
+      setTaskError(error);
+    }
+  }, [error]);
+
+  useEffect(() => {
     if (task) {
       setStatus(task.status);
       setPriority(task.priority);
@@ -132,7 +155,7 @@ const TaskDetail: React.FC = () => {
       setDueDate(task.dueDate ? new Date(task.dueDate) : null);
       setIsUpdated(false);
     }
-  };
+  }, [task]);
 
   useEffect(() => {
     if (!taskId) {
@@ -142,6 +165,21 @@ const TaskDetail: React.FC = () => {
     if (isSubmitting) setIsSubmitting(false);
     fetchTask();
   }, [taskId, navigate, isUpdated]);
+
+  console.log("error", taskError);
+
+  if (taskError) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="80vh"
+      >
+        <SomethingWentWrong />
+      </Box>
+    );
+  }
 
   if (loading || !task) {
     return (
@@ -412,8 +450,10 @@ const TaskDetail: React.FC = () => {
                   },
                 }}
               >
-                {board?.columns.map(({ name }) => (
-                  <MenuItem value={name}>{name}</MenuItem>
+                {board?.columns.map(({ name }, index) => (
+                  <MenuItem value={name} key={index}>
+                    {name}
+                  </MenuItem>
                 ))}
               </Select>
               {/* </StatusSelect> */}
@@ -566,7 +606,11 @@ const TaskDetail: React.FC = () => {
                   {board?.acceptedUserIds?.map((id) => {
                     const user = getUser(id);
                     const value = user?.name || user?.email || "Unknown user";
-                    return <MenuItem value={id}>{value}</MenuItem>;
+                    return (
+                      <MenuItem key={id} value={id}>
+                        {value}
+                      </MenuItem>
+                    );
                   })}
                 </Select>
               </Box>
@@ -654,53 +698,72 @@ const TaskDetail: React.FC = () => {
                   type="submit"
                   // onClick={() => hahandleCommentSubmitndleEdit()}
                   sx={{ height: 40, mr: 2, width: 100 }}
-                  style={ (!comment.trim()) ? { cursor: "not-allowed" } : {} }
+                  style={!comment.trim() ? { cursor: "not-allowed" } : {}}
                 >
                   Comment
                 </ActionButton>
               </CommentForm>
               <CommentWrapper>
                 {task.comments && task.comments.length > 0 ? (
-                  task.comments.map((comment, index) => {
-                    const commentUser = getUser(comment.commentedBy);
-                    const value = commentUser?.name || commentUser?.email;
-                    const commentDate = new Date(comment.createdAt);
+                  task.comments
+                    .sort(
+                      (a, b) =>
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    )
+                    .map((comment, index) => {
+                      const commentUser = getUser(comment.commentedBy);
+                      const value = commentUser?.name || commentUser?.email;
+                      const commentDate = new Date(comment.createdAt);
 
-                    return (
-                      <Box sx={{ display: "flex", width: "100%", gap: "20px", mt: 4}}>
-                        <Avatar
-                          alt={commentUser?.name || "User"}
-                          src=""
-                          sx={{ width: 32, height: 32 }}
+                      return (
+                        <Box
+                          key={index}
+                          sx={{
+                            display: "flex",
+                            width: "100%",
+                            gap: "20px",
+                            mt: 4,
+                          }}
                         >
-                          {value?.charAt(0).toUpperCase()}
-                        </Avatar>
-
-                        <CommentItem key={index}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              width: "100%",
-                            }}
+                          <Avatar
+                            alt={commentUser?.name || "User"}
+                            src=""
+                            sx={{ width: 32, height: 32 }}
                           >
-                            <Typography sx={{ fontWeight: "bold"}} variant="body2">{value}</Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
+                            {value?.charAt(0).toUpperCase()}
+                          </Avatar>
+
+                          <CommentItem key={index}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                width: "100%",
+                              }}
                             >
-                              {format(commentDate, "MMM d, yyyy h:mm a")}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ mt: 1,  width: "100%", display: "flex" }}>
-                          <Typography variant="body2" >
-                            {comment.text}
-                          </Typography>
-                          </Box>
-                        </CommentItem>
-                      </Box>
-                    );
-                  })
+                              <Typography
+                                sx={{ fontWeight: "bold" }}
+                                variant="body2"
+                              >
+                                {value}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {format(commentDate, "MMM d, yyyy h:mm a")}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ mt: 1, width: "100%", display: "flex" }}>
+                              <Typography variant="body2">
+                                {comment.text}
+                              </Typography>
+                            </Box>
+                          </CommentItem>
+                        </Box>
+                      );
+                    })
                 ) : (
                   <Typography
                     sx={{ textAlign: "left" }}

@@ -3,6 +3,8 @@ import EmailService from "../email/email.service";
 import crypto from "crypto";
 import BoardInvitation from "./boardInvitation.model";
 import BoardService from "../boards/boards.service";
+import { wss } from "../../app";
+import redisClient from "../../config/redisClient";
 
 class BoardInvitationService {
   private userService: UserService;
@@ -120,6 +122,12 @@ class BoardInvitationService {
           `You have been invited to join the board: "${board.name}". Please click the link to accept the invitation: ${invitationLink}`,
           emailHtml
         );
+        wss.clients.forEach((client) => {
+          client.send(
+            JSON.stringify({ event: "boardInvitationSent", data: invitation })
+          );
+        });
+        await redisClient.del("boards:all");
       }
     } catch (error: any) {
       throw new Error("Error creating invitation: " + error.message);
@@ -150,6 +158,9 @@ class BoardInvitationService {
       if (board) {
         // Assuming the board model has an acceptedUserIds array to store accepted users
         board.acceptedUserIds?.push(invitation.invitedUserId);
+        board.invitedUserIds = board.invitedUserIds.filter(
+          (id) => id !== invitation.invitedUserId
+        );
         await board.save();
       }
 
@@ -159,7 +170,6 @@ class BoardInvitationService {
         invitation.boardId
       );
       return { success: true, message: "Successfully joined the board!" };
-
     } catch (error: any) {
       throw new Error("Error accepting invitation: " + error.message);
     }
@@ -207,7 +217,10 @@ class BoardInvitationService {
 
   public async getUserInvitations(userId: string) {
     try {
-      const invitations = await BoardInvitation.find({ invitedUserId: userId, status: "pending" });
+      const invitations = await BoardInvitation.find({
+        invitedUserId: userId,
+        status: "pending",
+      });
       return invitations;
     } catch (error: any) {
       throw new Error("Error fetching invitations: " + error.message);

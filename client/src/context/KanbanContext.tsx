@@ -18,6 +18,9 @@ import {
   removeTask,
   fetchAllTasks,
 } from "../services/api";
+import { useAuth } from "./AuthContext";
+
+const WS_URL = "ws://localhost:8080";
 
 interface KanbanContextType {
   boards: IBoard[];
@@ -31,7 +34,7 @@ interface KanbanContextType {
   updateTask: (taskId: string, updates: Partial<ITask>) => Promise<void>;
   addTask: (taskData: Partial<ITask>) => Promise<ITask | null>;
   addColumn: (boardId: string, columnName: string) => Promise<void>;
-  getTasksByStatus: (status: string) => ITask[];
+  getTasksByStatus: (status: string, tasks: ITask[]) => ITask[];
   getUserById: (userId: string) => Promise<IUser | undefined>;
   updateColumnName: (
     boardId: string,
@@ -41,8 +44,15 @@ interface KanbanContextType {
   deleteColumn: (boardId: string, columnId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<boolean>;
   searchTasks: (query: string, task: ITask[]) => Promise<ITask[]>;
-  getTasksByUserId: (taskId: string) => Promise<ITask[]>;
-  getTasksByStatusByUserId: (tasks: ITask[], status: string[]) => Promise<ITask[]>;
+  getTasksByUserId: (userId: string) => Promise<ITask[]>;
+  getTasksByStatusByUserId: (
+    tasks: ITask[],
+    status: string[]
+  ) => Promise<ITask[]>;
+  task: ITask | null;
+  setTask: (task: ITask | null) => void;
+  invitations: any[];
+  setInvitations: (invitations: any[]) => void;
 }
 
 const KanbanContext = createContext<KanbanContextType | undefined>(undefined);
@@ -57,6 +67,52 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { showToast: toast } = useToast();
+  const [task, setTask] = useState<ITask | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const { user: activeUser } = useAuth();
+  const [invitations, setInvitations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const socket = new WebSocket(WS_URL);
+    socket.onopen = () => console.log("Connected to WebSocket server");
+    socket.onmessage = (message) => {
+      const { event, data, userId } = JSON.parse(message.data);
+      if (event === "partialUpdateTask") {
+        setTasks((currentTasks) =>
+          currentTasks.map((task) =>
+            task._id === data?.id || task.id === data?.id
+              ? { ...task, ...data }
+              : task
+          )
+        );
+        if (task?._id === data?.id || task?.id === data?.id) {
+          setTask({ ...task, ...data });
+        }
+        const user = getUserById(userId, users);
+        toast(`Task updated by ${user?.name || user?.email}`, "success", "");
+      }
+      if (event === "boardInvitationSent") {
+        setInvitations((currentInvitations) => [...currentInvitations, data]);
+        toast("Board invitation recived", "info", "");
+      }
+    };
+    socket.onerror = (error) => console.error("❌ WebSocket Error:", error);
+    socket.onclose = () => console.log("🔌 Disconnected from WebSocket server");
+
+    setWs(socket);
+    return () => socket.close();
+  }, [task, invitations]);
+
+  const fetchAllUsers = async () => {
+    const users = await fetchUsers();
+    if (users) {
+      setUsers(users);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllUsers();
+  }, []);
 
   const refreshData = async () => {
     setLoading(true);
@@ -66,13 +122,9 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
         currentBoard?._id?.toString() || currentBoard?.id?.toString();
 
       // Fetch boards and users in parallel
-      const [boardsData, usersData] = await Promise.all([
-        fetchBoards(),
-        fetchUsers(),
-      ]);
+      const [boardsData] = await Promise.all([fetchBoards()]);
 
       setBoards(boardsData);
-      setUsers(usersData);
 
       // Only fetch tasks if we have a current board
       if (boardId) {
@@ -89,7 +141,7 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
       }
     } catch (err) {
       console.error("Error in refreshData:", err);
-      setError("Failed to fetch data");
+      setError("Failed to fetch boards");
       toast("Failed to fetch data. Please try again.", "error");
     } finally {
       setLoading(false);
@@ -98,7 +150,7 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     refreshData();
-  }, [currentBoard?._id, currentBoard?.id]);
+  }, [currentBoard?._id, currentBoard?.id, invitations, activeUser]);
 
   const updateTask = async (taskId: string, updates: Partial<ITask>) => {
     try {
@@ -113,7 +165,11 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
 
       // API call
       if (updates) {
-        const updatedTask = await updateTaskDetails(taskId, updates);
+        const updatedTask = await updateTaskDetails(
+          taskId,
+          updates,
+          activeUser.id
+        );
         if (!updatedTask) {
           throw new Error("Failed to update task status");
         }
@@ -128,12 +184,13 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const getTasksByUserId = async (userId: string) => {
-    if (tasks.length === 0) {
+    try {
       const fetchedTasks = await fetchAllTasks(); // Use a different variable name
       return fetchedTasks.filter((task) => task.assignedTo === userId); // Use filter instead of map
+    } catch (error) {
+      console.error("Error fetching tasks by user ID:", error);
+      throw new Error("Failed to fetch tasks by user ID");
     }
-
-    return tasks.filter((task) => task.assignedTo === userId);
   };
 
   const deleteTask = async (taskId: string): Promise<boolean> => {
@@ -254,7 +311,7 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     );
   };
 
-  const getTasksByStatus = (status: string) => {
+  const getTasksByStatus = (status: string, tasks: ITask[]) => {
     const boardId =
       currentBoard?._id?.toString() || currentBoard?.id?.toString();
 
@@ -269,20 +326,19 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     return filteredTasks;
   };
 
-  const getUserById = (userId: string) => {
-    return users.find((user) => user.userId === userId);
+  const getUserById = (userId: string, users: IUser[]) => {
+    return users.find((user) => user.id === userId);
   };
 
   const getTasksByStatusByUserId = (tasks: ITask[], statuses: string[]) => {
-  
     return tasks.filter((task) => {
       const taskStatus = task.status.toLowerCase().trim();
-  
+
       const match = statuses.some((status) => {
         const formattedStatus = status.toLowerCase().trim();
         return taskStatus === formattedStatus;
       });
-  
+
       return match;
     });
   };
@@ -335,7 +391,11 @@ export const KanbanProvider: React.FC<{ children: ReactNode }> = ({
     deleteTask,
     searchTasks,
     getTasksByUserId,
-    getTasksByStatusByUserId
+    getTasksByStatusByUserId,
+    task,
+    setTask,
+    invitations,
+    setInvitations,
   };
 
   return (
