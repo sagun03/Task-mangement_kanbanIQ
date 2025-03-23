@@ -35,7 +35,6 @@ import {
   OAuthButtons,
   OAuthButton,
 } from "../styles/login";
-import DOMPurify from "dompurify";
 import { useToast } from "../context/ToastProvider";
 import LoadingOverlay from "../components/Loader";
 

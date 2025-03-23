@@ -51,6 +51,8 @@ export interface ITask {
   assignedBy: string;
   status: "To Do" | "In Progress" | "Done";
   createdBy: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   boardOriginalId: string;
   comments: { text: string; commentedBy: string; createdAt: Date | string }[];
   reminders: { reminderDate: Date | string; sent: boolean }[];

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AppBar,
   Toolbar,
@@ -55,7 +54,7 @@ const LogoText = styled(ListItemText)({
     fontWeight: 700,
     letterSpacing: "-0.5px",
     fontFamily: "'Open Sans', sans-serif",
-  }
+  },
 });
 
 // Add new styled component for menu items
@@ -65,26 +64,24 @@ const MenuItemText = styled(ListItemText)({
     color: "black",
     letterSpacing: "0.2px",
     fontFamily: "Open Sans, sans-serif",
-  }
+  },
 });
 
-const Navbar = ({isSideBar = true}) => {
+const Navbar = ({ isSideBar = true }) => {
   const { isAuthenticated, logout, user } = useAuth();
-  const { boards } = useKanban();
-
+  const { boards, invitations, setInvitations } = useKanban();
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  
+  const [notificationsAnchorEl, setNotificationsAnchorEl] =
+    useState<null | HTMLElement>(null);
+
   const getBoard = (boardId: string) => {
     return boards.find(
       (board) => (board._id?.toString() || board.id?.toString()) === boardId
     );
   };
-
 
   // Open & Close Dropdown
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -105,15 +102,13 @@ const Navbar = ({isSideBar = true}) => {
 
   // Menu items with their paths
   const menuItems = [
-    { text: 'Dashboard', icon: MdHome, path: '/dashboard' },
-    { text: 'My Boards', icon: MdTimeline, path: '/dashboard/myboards' },
-    { text: 'Tasks', icon: MdFormatListBulleted, path: '/dashboard/tasks' },
-    // { text: 'Team Collaboration', icon: MdGroups, path: '/dashboard/team' },
+    { text: "Dashboard", icon: MdHome, path: "/dashboard" },
+    { text: "My Boards", icon: MdTimeline, path: "/dashboard/myboards" },
+    { text: "Tasks", icon: MdFormatListBulleted, path: "/dashboard/tasks" },
   ];
 
   const loadInvitations = async () => {
     const response = await fetchInvitations(user?.id);
-  console.log("response", response)
     if (response.success) {
       setInvitations(response.invitations || []);
     }
@@ -138,40 +133,39 @@ const Navbar = ({isSideBar = true}) => {
     handleNotificationsClose();
   };
 
-console.log("isAuthenticated", isAuthenticated)
   return (
-    <Box sx={{ display: "flex"}} px="1rem">
+    <Box sx={{ display: "flex" }} px="1rem">
       {/* Sidebar: Only show when authenticated */}
-      {isSideBar && (isAuthenticated || !isHomePage ) && (
+      {isSideBar && (isAuthenticated || !isHomePage) && (
         <StyledDrawer variant="permanent">
-          <Box sx={{ 
-            p: 2, 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column' 
-          }}>
+          <Box
+            sx={{
+              p: 2,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             {/* Logo section */}
             <Box sx={{ mb: 4 }}>
               <ListItemButton
                 sx={{
                   borderRadius: 2,
-                  '&:hover': {
-                    backgroundColor: 'rgba(14, 24, 43, 0.04)',
+                  "&:hover": {
+                    backgroundColor: "rgba(14, 24, 43, 0.04)",
                   },
                 }}
                 onClick={() => navigate("/dashboard")}
               >
                 <ListItemIcon>
                   <FaLayerGroup
-                    style={{ 
-                      color: "#0e182b", 
-                      fontSize: "24px"
+                    style={{
+                      color: "#0e182b",
+                      fontSize: "24px",
                     }}
                   />
                 </ListItemIcon>
-                <LogoText
-                  primary="KanbanIQ"
-                />
+                <LogoText primary="KanbanIQ" />
               </ListItemButton>
             </Box>
 
@@ -186,31 +180,33 @@ console.log("isAuthenticated", isAuthenticated)
                     borderRadius: 2,
                     mb: 1,
                     py: 1.2,
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(14, 24, 43, 0.08)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(14, 24, 43, 0.12)',
+                    "&.Mui-selected": {
+                      backgroundColor: "rgba(14, 24, 43, 0.08)",
+                      "&:hover": {
+                        backgroundColor: "rgba(14, 24, 43, 0.12)",
                       },
                     },
-                    '&:hover': {
-                      backgroundColor: 'rgba(14, 24, 43, 0.04)',
+                    "&:hover": {
+                      backgroundColor: "rgba(14, 24, 43, 0.04)",
                     },
                   }}
                 >
                   <ListItemIcon>
-                    <item.icon style={{ 
-                      color: "black",
-                      fontSize: "20px",
-                      opacity: currentPath === item.path ? 1 : 0.8
-                    }} />
+                    <item.icon
+                      style={{
+                        color: "black",
+                        fontSize: "20px",
+                        opacity: currentPath === item.path ? 1 : 0.8,
+                      }}
+                    />
                   </ListItemIcon>
-                  <MenuItemText 
+                  <MenuItemText
                     primary={item.text}
                     sx={{
-                      '& .MuiTypography-root': {
+                      "& .MuiTypography-root": {
                         color: "black",
                         fontWeight: currentPath === item.path ? 700 : 600,
-                      }
+                      },
                     }}
                   />
                 </ListItemButton>
@@ -219,30 +215,32 @@ console.log("isAuthenticated", isAuthenticated)
 
             {/* Logout button at bottom */}
             <List>
-              <ListItemButton 
+              <ListItemButton
                 onClick={handleLogout}
                 sx={{
                   borderRadius: 2,
                   py: 1.2,
-                  '&:hover': {
-                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  "&:hover": {
+                    backgroundColor: "rgba(239, 68, 68, 0.08)",
                   },
                 }}
               >
                 <ListItemIcon>
-                  <MdLogout style={{ 
-                    color: "#ef4444", 
-                    fontSize: "20px",
-                    opacity: 0.9
-                  }} />
+                  <MdLogout
+                    style={{
+                      color: "#ef4444",
+                      fontSize: "20px",
+                      opacity: 0.9,
+                    }}
+                  />
                 </ListItemIcon>
-                <MenuItemText 
+                <MenuItemText
                   primary="Logout"
                   sx={{
-                    '& .MuiTypography-root': {
+                    "& .MuiTypography-root": {
                       color: "#ef4444",
                       fontWeight: 500,
-                    }
+                    },
                   }}
                 />
               </ListItemButton>
@@ -255,7 +253,11 @@ console.log("isAuthenticated", isAuthenticated)
       <Box sx={{ flexGrow: 1 }}>
         <AppBar
           position="fixed"
-          sx={{ backgroundColor: "white", color: "black", borderBottom: "2px solid #F5F5F5" }}
+          sx={{
+            backgroundColor: "white",
+            color: "black",
+            borderBottom: "2px solid #F5F5F5",
+          }}
           // backgroundColor="white"
           elevation={0}
         >
@@ -265,10 +267,9 @@ console.log("isAuthenticated", isAuthenticated)
               justifyContent: "space-between",
               alignItems: "center",
             }}
-
           >
             {/* Show Logo only when NOT authenticated */}
-            {(!isSideBar || (!isAuthenticated  || isHomePage)) && (
+            {(!isSideBar || !isAuthenticated || isHomePage) && (
               <>
                 <Typography
                   variant="h6"
@@ -299,57 +300,87 @@ console.log("isAuthenticated", isAuthenticated)
                     <MdSearch style={{ color: "#0e182b" }} />
                   </IconButton>
                 </SearchBar> */}
-                <div>
-                  </div>
+                <div></div>
               </>
             )}
 
             {/* Authenticated User View */}
             {isAuthenticated && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {/* Notifications Icon with Badge */}
-          <IconButton color="inherit" onClick={handleNotificationsOpen}>
-            <Badge badgeContent={invitations.length} color="error">
-              <MdNotifications size={28} />
-            </Badge>
-          </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {/* Notifications Icon with Badge */}
+                <IconButton color="inherit" onClick={handleNotificationsOpen}>
+                  <Badge badgeContent={invitations.length} color="error">
+                    <MdNotifications size={28} />
+                  </Badge>
+                </IconButton>
 
-          {/* Notifications Dropdown */}
-          <Menu anchorEl={notificationsAnchorEl} open={Boolean(notificationsAnchorEl)} onClose={handleNotificationsClose}>
-            {invitations.length > 0 ? (
-              <List>
-                {invitations.map((invitation, index) => (
-                  <div key={invitation._id}>
-                  <ListItem sx={{ cursor: "pointer", maxWidth: "300px" }} onClick={() => handleAcceptInvitation(invitation.token)}>
-                    <ListItemIcon sx={{ minWidth: "45px"}}>
-                      <Mail size={24} color="black" /> {/* Lucide React Mail icon */}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={`Invitation to board: ${getBoard(invitation.boardId)?.name}`} 
-                      secondary="Click to accept" 
-                    />
-                  </ListItem>
-                  {index < invitations.length - 1 && <Divider />} {/* Add divider except for last item */}
-                </div>
-                ))}
-              </List>
-            ) : (
-              <MenuItem disabled>No new invitations</MenuItem>
+                {/* Notifications Dropdown */}
+                <Menu
+                  anchorEl={notificationsAnchorEl}
+                  open={Boolean(notificationsAnchorEl)}
+                  onClose={handleNotificationsClose}
+                >
+                  {invitations.length > 0 ? (
+                    <List>
+                      {invitations
+                        .sort(
+                          (a, b) =>
+                            new Date(b.createdAt).getTime() -
+                            new Date(a.createdAt).getTime()
+                        )
+                        .map((invitation, index) => (
+                          <div key={index}>
+                            <ListItem
+                              sx={{ cursor: "pointer", maxWidth: "300px" }}
+                              onClick={() =>
+                                handleAcceptInvitation(invitation.token)
+                              }
+                            >
+                              <ListItemIcon sx={{ minWidth: "45px" }}>
+                                <Mail size={24} color="black" />{" "}
+                                {/* Lucide React Mail icon */}
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={`Invitation to board: ${
+                                  getBoard(invitation.boardId)?.name
+                                }`}
+                                secondary="Click to accept"
+                              />
+                            </ListItem>
+                            {index < invitations.length - 1 && <Divider />}{" "}
+                            {/* Add divider except for last item */}
+                          </div>
+                        ))}
+                    </List>
+                  ) : (
+                    <MenuItem disabled>No new invitations</MenuItem>
+                  )}
+                </Menu>
+
+                {/* User Profile Dropdown */}
+                <Typography
+                  style={{ cursor: "pointer" }}
+                  onClick={handleMenuOpen}
+                  variant="body1"
+                >
+                  {user?.name || user?.email}
+                </Typography>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={() => navigate("/profile")}>
+                    Profile
+                  </MenuItem>
+                  <MenuItem onClick={() => navigate("/settings")}>
+                    Settings
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu>
+              </Box>
             )}
-          </Menu>
-
-          {/* User Profile Dropdown */}
-          <Typography style={{ cursor: "pointer" }} onClick={handleMenuOpen} variant="body1">
-            {user?.name || user?.email}
-          </Typography>
-
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-            <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
-            <MenuItem onClick={() => navigate("/settings")}>Settings</MenuItem>
-            <MenuItem onClick={handleLogout}>Logout</MenuItem>
-          </Menu>
-        </Box>
-      )}
             {!isAuthenticated && (
               <Box
                 sx={{

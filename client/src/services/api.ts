@@ -1,32 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { IBoard, ITask, IUser } from '../types/kanban';
+import { IBoard, ITask, IUser } from "../types/kanban";
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = "http://localhost:8080/api";
 
 export const fetchBoards = async (): Promise<IBoard[]> => {
   try {
     const response = await fetch(`${API_URL}/boards`);
     if (!response.ok) {
-      throw new Error('Failed to fetch boards');
+      throw new Error("Failed to fetch boards");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching boards:', error);
-    return [];
+    console.error("Error fetching boards:", error);
+
+    throw new Error("Failed to fetch boards");
   }
 };
 
-export const fetchBoardById = async (boardId: string): Promise<IBoard | null> => {
+export const fetchBoardById = async (
+  boardId: string
+): Promise<IBoard | null> => {
   try {
     const response = await fetch(`${API_URL}/boards/${boardId}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch board');
+      throw new Error("Failed to fetch board");
     }
     return await response.json();
   } catch (error) {
     console.error(`Error fetching board ${boardId}:`, error);
-    return null;
+    throw new Error("Failed to fetch board");
   }
 };
 
@@ -34,12 +37,12 @@ export const fetchAllTasks = async (): Promise<ITask[]> => {
   try {
     const response = await fetch(`${API_URL}/tasks`);
     if (!response.ok) {
-      throw new Error('Failed to fetch board');
+      throw new Error("Failed to fetch board");
     }
     return await response.json();
   } catch (error) {
     console.error(`Error fetching tasks:`, error);
-    return [];
+    throw new Error("Failed to fetch tasks");
   }
 };
 
@@ -49,13 +52,15 @@ export const fetchTasks = async (boardId?: string): Promise<ITask[]> => {
       // Use the dedicated endpoint for fetching tasks by board ID
       const url = `${API_URL}/tasks/fetchByBoardId/${boardId}`;
       console.log("Fetching tasks with URL:", url);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
-        console.error(`Failed to fetch tasks for board. Status: ${response.status}`);
-        throw new Error('Failed to fetch tasks for board');
+        console.error(
+          `Failed to fetch tasks for board. Status: ${response.status}`
+        );
+        throw new Error("Failed to fetch tasks for board");
       }
-      
+
       const tasks = await response.json();
       console.log("API returned tasks for board:", tasks);
       return tasks;
@@ -63,14 +68,14 @@ export const fetchTasks = async (boardId?: string): Promise<ITask[]> => {
       // Fetch all tasks if no boardId is provided
       const response = await fetch(`${API_URL}/tasks`);
       if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+        throw new Error("Failed to fetch tasks");
       }
-      
+
       return await response.json();
     }
   } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return [];
+    console.error("Error fetching tasks:", error);
+    throw new Error("Failed to fetch tasks");
   }
 };
 
@@ -80,13 +85,13 @@ export const fetchTaskById = async (taskId?: string): Promise<ITask | null> => {
       // Use the dedicated endpoint for fetching tasks by board ID
       const url = `${API_URL}/tasks/${taskId}`;
       console.log("Fetching tasks with URL:", url);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         console.error(`Failed to fetch task. Status: ${response.status}`);
-        throw new Error('Failed to fetch tasks for board');
+        throw new Error("Failed to fetch tasks for board");
       }
-      
+
       const task = await response.json();
       console.log("API returned task", task);
       return task;
@@ -94,14 +99,14 @@ export const fetchTaskById = async (taskId?: string): Promise<ITask | null> => {
       // Fetch all tasks if no boardId is provided
       const response = await fetch(`${API_URL}/tasks`);
       if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+        throw new Error("Failed to fetch tasks");
       }
-      
+
       return await response.json();
     }
   } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return null;
+    console.error("Error fetching tasks:", error);
+    throw new Error("Failed to fetch task details");
   }
 };
 
@@ -109,93 +114,105 @@ export const fetchUsers = async (): Promise<IUser[]> => {
   try {
     const response = await fetch(`${API_URL}/users`);
     if (!response.ok) {
-      throw new Error('Failed to fetch users');
+      throw new Error("Failed to fetch users");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return [];
+    console.error("Error fetching users:", error);
+    throw new Error("Failed to fetch users");
   }
 };
 
-export const updateTaskDetails = async (taskId: string, data: Partial<ITask>): Promise<ITask | null> => {
+export const updateTaskDetails = async (
+  taskId: string,
+  data: Partial<ITask>,
+  userId: string
+): Promise<ITask | null> => {
   try {
-    const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-      method: 'PATCH',
+    const response = await fetch(`${API_URL}/tasks/${taskId}/${userId}`, {
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error('Failed to update task status');
+      throw new Error("Failed to update task status");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error updating task status:', error);
-    return null;
+    console.error("Error updating task status:", error);
+    throw new Error("Failed to update task details");
   }
 };
 
-export const createTask = async (taskData: Partial<ITask>): Promise<ITask | null> => {
+export const createTask = async (
+  taskData: Partial<ITask>
+): Promise<ITask | null> => {
   try {
     const response = await fetch(`${API_URL}/tasks`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(taskData),
     });
     if (!response.ok) {
-      throw new Error('Failed to create task');
+      throw new Error("Failed to create task");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error creating task:', error);
-    return null;
+    console.error("Error creating task:", error);
+    throw new Error("Failed to create task");
   }
 };
 
-export const updateBoard = async (boardId: string, data: Partial<IBoard>): Promise<IBoard | null> => {
+export const updateBoard = async (
+  boardId: string,
+  data: Partial<IBoard>
+): Promise<IBoard | null> => {
   try {
     const response = await fetch(`${API_URL}/boards/${boardId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error('Failed to update board');
+      throw new Error("Failed to update board");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error updating board:', error);
-    return null;
+    console.error("Error updating board:", error);
+    throw new Error("Failed to update board");
   }
 };
 
 export const removeTask = async (taskId: string): Promise<boolean> => {
   try {
     const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete task');
+      throw new Error("Failed to delete task");
     }
 
     return true;
   } catch (error) {
-    console.error('Error deleting task:', error);
-    return false;
+    console.error("Error deleting task:", error);
+    throw new Error("Failed to delete task");
   }
 };
 
-export const acceptInvitation = async (token: string, userId: string): Promise<{ success: boolean; message: string }> => {
+export const acceptInvitation = async (
+  token: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> => {
   try {
     const response = await fetch(`${API_URL}/boardInvitation/accept`, {
       method: "POST",
@@ -212,16 +229,24 @@ export const acceptInvitation = async (token: string, userId: string): Promise<{
     return { success: true, message: data.message };
   } catch (error: any) {
     console.error("Error accepting invitation:", error);
-    return { success: false, message: error.message || "Something went wrong." };
+    return {
+      success: false,
+      message: error.message || "Something went wrong.",
+    };
   }
 };
 
-export const fetchInvitations = async (userId: string): Promise<{ success: boolean; invitations?: any[]; message?: string }> => {
+export const fetchInvitations = async (
+  userId: string
+): Promise<{ success: boolean; invitations?: any[]; message?: string }> => {
   try {
-    const response = await fetch(`${API_URL}/boardInvitation/requests/${userId}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      `${API_URL}/boardInvitation/requests/${userId}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     const data = await response.json();
     console.log("Invitations data:", data);
@@ -232,6 +257,9 @@ export const fetchInvitations = async (userId: string): Promise<{ success: boole
     return { success: true, invitations: data };
   } catch (error: any) {
     console.error("Error fetching invitations:", error);
-    return { success: false, message: error.message || "Something went wrong." };
+    return {
+      success: false,
+      message: error.message || "Something went wrong.",
+    };
   }
 };

@@ -21,6 +21,7 @@ import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
 import { useKanban } from '../context/KanbanContext';
 import { ITask } from '../types/kanban';
+import SomethingWentWrong from '../components/Error';
 
 // Add a type for valid status values
 type TaskStatus = 'To Do' | 'In Progress' | 'Completed';
@@ -153,9 +154,7 @@ const MyTasks: React.FC = () => {
           alignItems: 'center', 
           minHeight: '400px' 
         }}>
-          <Typography color="error" sx={{ fontSize: '1.1rem' }}>
-            {error}
-          </Typography>
+          <SomethingWentWrong />
         </Box>
       ) : tasks.length === 0 ? (
         <Box

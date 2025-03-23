@@ -7,32 +7,26 @@ import {
   Card,
   CardContent,
   Grid,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Paper,
-  IconButton,
-  Drawer,
-  List as MuiList,
-  ListItemIcon,
-  ListItemButton,
   createTheme,
   ThemeProvider,
   CssBaseline,
-  useMediaQuery,
-  Chip,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { MdAdd, MdNavigateNext, MdNavigateBefore } from "react-icons/md";
+import { MdAdd } from "react-icons/md";
 import "@fontsource/open-sans/600.css";
 import { useAuth } from "../context/AuthContext";
-import api from "../config/axiosInstance";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { IBoard } from "../types/kanban";
-
-const drawerWidth = 280;
+import { IBoard, ITask } from "../types/kanban";
+import { useKanban } from "../context/KanbanContext";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import SomethingWentWrong from "../components/Error";
 
 const theme = createTheme({
   typography: {
@@ -40,31 +34,6 @@ const theme = createTheme({
     fontWeightRegular: 400,
   },
 });
-
-const StyledDrawer = styled(Drawer)({
-  width: drawerWidth,
-  flexShrink: 0,
-  "& .MuiDrawer-paper": {
-    width: drawerWidth,
-    boxSizing: "border-box",
-    backgroundColor: "#f8fafa",
-    boxShadow: "0px 0 6px -2px rgba(0, 0, 0, 0.1)",
-  },
-});
-
-const SearchBar = styled(Paper)(({ theme }) => ({
-  padding: "2px 4px",
-  display: "flex",
-  alignItems: "center",
-  width: "100%",
-  maxWidth: 400,
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  boxShadow: "none",
-  [theme.breakpoints.down("sm")]: {
-    maxWidth: "100%",
-  },
-}));
 
 const BoardCard = styled(Card)({
   height: "100%",
@@ -82,143 +51,55 @@ const BoardCard = styled(Card)({
   },
 });
 
-const TaskColumn = styled(Paper)(({ theme }) => ({
-  padding: 16,
-  borderRadius: 8,
-  height: "96%",
-  [theme.breakpoints.down("sm")]: {
-    marginBottom: theme.spacing(2),
-  },
-}));
-
-const StyledButton = styled(Button)(({ variant }) => ({
-  textTransform: "none",
-  px: 3,
-  py: 1.5,
-  borderRadius: 2,
-  ...(variant === "contained"
-    ? {
-        backgroundColor: "#0e182b",
-        color: "white",
-        "&:hover": {
-          backgroundColor: "#1a2537",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        },
-      }
-    : {
-        color: "#0e182b",
-        borderColor: "#0e182b",
-        "&:hover": {
-          borderColor: "#0e182b",
-          backgroundColor: "rgba(14, 24, 43, 0.04)",
-        },
-      }),
-}));
-
-interface Board {
-  id: string;
-  name: string;
-  adminId: string;
-  invitedUserIds: string[];
-  columnNames: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Update the Task interface
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  dueDate: string;
-  priority: string;
-  boardOriginalId: string;
-  createdBy: string;
-}
-
-interface ActivityItem {
-  id: string;
-  user: string;
-  action: string;
-  target: string;
-  timestamp: string;
-}
-
 export default function Dashboard() {
-  const [boards, setBoards] = useState<IBoard[]>([]);
+  const [myBoards, setMyBoards] = useState<IBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [columns, setColumns] = useState<string[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
+  const [tasksError, setTasksError] = useState<string>("");
   const [tasksLoading, setTasksLoading] = useState(true);
-  const [tasksError, setTasksError] = useState("");
+  const { boards, getTasksByUserId, error: dataError } = useKanban();
 
   useEffect(() => {
-    const fetchBoards = async () => {
-      try {
-        const response = await api.get("/boards");
-        if (Array.isArray(response.data)) {
-          // Filter boards where adminId matches user's uid
-          const userBoards = response.data.filter(
-            (board) => board.adminId === user?.id || board.acceptedUserIds.includes(user?.id)
-          );
-          setBoards(userBoards);
-          setColumns(userBoards.map((board) => board.columnNames).flat());
-          console.log(boards, columns);
-        } else {
-          setError("Invalid response format");
-        }
-      } catch (error) {
-        console.error("Error fetching boards:", error);
-        setError("Failed to fetch boards");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchTasks = async () => {
-      try {
-        const response = await api.get("/tasks");
-        if (Array.isArray(response.data)) {
-          // Filter tasks created by the current user
-          const userTasks = response.data.filter(
-            (task) => task.createdBy === user?.userId
-          );
-          setTasks(userTasks);
-        }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        setTasksError("Failed to fetch tasks");
-      } finally {
-        setTasksLoading(false);
-      }
-    };
-    console.log(user);
-    if (user?.userId) {
-      fetchBoards();
-      fetchTasks();
+    if (dataError) {
+      setError(dataError);
     }
-  }, [user?.userId]);
+  }, [dataError]);
 
-  const activities: ActivityItem[] = [
-    {
-      id: "1",
-      user: "John",
-      action: "updated",
-      target: "Homepage Design",
-      timestamp: "2 hours ago",
-    },
-    {
-      id: "2",
-      user: "Emma",
-      action: "commented on",
-      target: "API Integration",
-      timestamp: "5 hours ago",
-    },
-  ];
+  useEffect(() => {
+    const userBoards = boards.filter(
+      (board) =>
+        board.adminId === user?.id || board?.acceptedUserIds?.includes(user?.id)
+    );
+    setMyBoards(userBoards);
+    setLoading(false);
+  }, [boards]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await getTasksByUserId(user.id);
+      setTasks(response);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasksError("Failed to fetch tasks");
+    } finally {
+      setTasksLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const uniqueStatuses = [...new Set(tasks.map((task) => task.status))];
+
+  const taskStats = uniqueStatuses.map((status) => ({
+    status,
+    count: tasks.filter((task) => task.status === status).length,
+  }));
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -267,25 +148,6 @@ export default function Dashboard() {
             >
               Create Board
             </Button>
-            {/* <Button
-              variant="outlined"
-              sx={{
-                color: "#0e182b",
-                borderColor: "#0e182b",
-                textTransform: "none",
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                "&:hover": {
-                  borderColor: "#0e182b",
-                  bgcolor: "rgba(14, 24, 43, 0.04)",
-                },
-              }}
-              startIcon={<MdAdd />}
-              onClick={() => navigate("/createtask")}
-            >
-              Add Task
-            </Button> */}
           </Box>
 
           <Typography
@@ -311,8 +173,24 @@ export default function Dashboard() {
               ))}
             </Box>
           ) : error ? (
-            <Typography color="error">{error}</Typography>
-          ) : boards.length === 0 ? (
+            <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              py: 4,
+              px: 3,
+              bgcolor: "white",
+              borderRadius: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              mb: 4,
+              textAlign: "center",
+            }}
+          >
+            <SomethingWentWrong />
+            </Box>
+          ) : myBoards.length === 0 ? (
             <Grid container justifyContent="center">
               <Grid item xs={12} md={6}>
                 <Box
@@ -331,7 +209,7 @@ export default function Dashboard() {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: "#666" }}>
-                    No boards found
+                    No myBoards found
                   </Typography>
                   <Typography variant="body2" sx={{ color: "#888" }}>
                     Create a new board to get started with your projects
@@ -341,7 +219,7 @@ export default function Dashboard() {
             </Grid>
           ) : (
             <Grid container spacing={4} sx={{ mb: 4 }}>
-              {boards
+              {myBoards
                 .sort(
                   (a, b) =>
                     new Date(b.createdAt).getTime() -
@@ -369,205 +247,47 @@ export default function Dashboard() {
             </Grid>
           )}
 
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            {["To Do", "In Progress", "Done"].map((status) => (
-              <Grid item xs={12} sm={6} md={3.6} key={status}>
-                <TaskColumn>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                      pb: 2,
-                      borderBottom: "1px solid rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: "#0e182b",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {status}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "#666666",
-                        bgcolor: "rgba(0,0,0,0.05)",
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                      }}
-                    >
-                      {tasks.filter((task) => task.status === status).length}
-                    </Typography>
-                  </Box>
-                  {tasksLoading ? (
-                    <>
-                      {[1].map((_, index) => (
-                        <Box
-                          key={index}
-                          width="100%"
-                          sx={{
-                            background: "#fff",
-                            borderRadius: "10px",
-                            margin: "5px",
-                            padding: "20px",
-                          }}
-                        >
-                          <SkeletonLoader count={4} width="80%" title />
-                        </Box>
-                      ))}
-                    </>
-                  ) : tasksError ? (
-                    <Typography
-                      color="error"
-                      sx={{ textAlign: "center", py: 2 }}
-                    >
-                      {tasksError}
-                    </Typography>
-                  ) : (
-                    <Box sx={{ minHeight: 200 }}>
-                      {tasks
-                        .filter((task) => task.status === status)
-                        .map((task) => (
-                          <Card
-                            key={task.id}
-                            sx={{
-                              mb: 2,
-                              border: "1px solid rgba(0,0,0,0.1)",
-                              boxShadow: "none",
-                              "&:hover": {
-                                boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                              },
-                            }}
-                          >
-                            <CardContent sx={{ p: 2 }}>
-                              <Typography
-                                sx={{
-                                  color: "#0e182b",
-                                  fontWeight: 500,
-                                  mb: 1,
-                                }}
-                              >
-                                {task.title}
-                              </Typography>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
-                                  sx={{ color: "#666666" }}
-                                >
-                                  Due:{" "}
-                                  {new Date(task.dueDate).toLocaleDateString()}
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    gap: 1,
-                                  }}
-                                >
-                                  <Chip
-                                    label={task.priority}
-                                    size="small"
-                                    sx={{
-                                      bgcolor:
-                                        task.priority === "high"
-                                          ? "#fee2e2"
-                                          : task.priority === "medium"
-                                          ? "#fef3c7"
-                                          : "#ecfdf5",
-                                      color:
-                                        task.priority === "high"
-                                          ? "#dc2626"
-                                          : task.priority === "medium"
-                                          ? "#d97706"
-                                          : "#059669",
-                                      fontWeight: 500,
-                                      fontSize: "0.75rem",
-                                    }}
-                                  />
-                                </Box>
-                              </Box>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </Box>
-                  )}
-                </TaskColumn>
-              </Grid>
-            ))}
-          </Grid>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={5}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
-                    Recent Activity
-                  </Typography>
-                  <List>
-                    {activities.map((activity) => (
-                      <ListItem key={activity.id}>
-                        <ListItemAvatar>
-                          <Avatar>{activity.user[0]}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={`${activity.user} ${activity.action} "${activity.target}"`}
-                          secondary={activity.timestamp}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      mt: 2,
-                    }}
-                  >
-                    <IconButton>
-                      <MdNavigateBefore style={{ color: "#0e182b" }} />
-                    </IconButton>
-                    <Typography sx={{ mx: 2, color: "#0e182b" }}>
-                      6 / 8
-                    </Typography>
-                    <IconButton>
-                      <MdNavigateNext style={{ color: "#0e182b" }} />
-                    </IconButton>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+          <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
+            Task Analytics
+          </Typography>
+          <Grid container justifyContent="center">
             <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
-                    Productivity Insights
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                  py: 4,
+                  px: 3,
+                  bgcolor: "white",
+                  borderRadius: 2,
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  mb: 4,
+                  textAlign: "center",
+                }}
+              >
+                {tasksLoading ? (
+                  <Typography variant="body1" sx={{ color: "#666" }}>
+                    Loading tasks...
                   </Typography>
-                  <Box
-                    sx={{
-                      height: 200,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      bgcolor: "#f8fafa",
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Typography color="#0e182b">Productivity Graph</Typography>
-                  </Box>
-                </CardContent>
-              </Card>
+                ) : tasksError ? (
+                  <SomethingWentWrong />
+                ) : taskStats.length === 0 ? (
+                  <Typography variant="body1" sx={{ color: "#666" }}>
+                    No tasks available.
+                  </Typography>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={taskStats}>
+                      <XAxis dataKey="status" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#0e182b" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </Box>

@@ -10,8 +10,6 @@ import {
   ColumnsContainer,
 } from "../components/styled/KanbanElemnets";
 import { fetchBoardById, updateBoard } from "../services/api";
-// import { toast } from '@/hooks/use-toast';
-// import AddTaskDialog from '@/components/AddTaskDialog';
 import AddColumnDialog from "../components/AddColumnDialog";
 
 import {
@@ -45,6 +43,9 @@ import { useToast } from "../context/ToastProvider";
 import AddTaskDialog from "../components/AddTaskDialog";
 import InviteUserDialog from "../components/InviteUserDialog";
 import { useAuth } from "../context/AuthContext";
+import { ITask } from "../types/kanban";
+import SomethingWentWrong from "../components/Error";
+import { th } from "date-fns/locale";
 
 export const ActionButton = styled(MuiButton)`
   &.MuiButton-root {
@@ -157,11 +158,13 @@ const BoardDetail: React.FC = () => {
     }
 
     try {
-      console.log("Loading board with ID:", boardId);
       const board = await fetchBoardById(boardId);
-      console.log("Fetched board:", board);
-
       if (board) {
+        if (board.adminId !== user.id && !board.acceptedUserIds?.includes(user.id)) {
+          navigate("/dashboard");
+          toast("You are not authorized to view this board.", "error");
+          return;
+        }
         setCurrentBoard(board);
       } else {
         navigate("/dashboard");
@@ -230,22 +233,26 @@ const BoardDetail: React.FC = () => {
   };
 
   const handleInviteUsers = async (selectedUsers: any) => {
-    console.log("Inviting users:", selectedUsers);
     if (!currentBoard) return;
 
-    await updateBoard(currentBoard?.id || currentBoard._id, {
-      invitedUserIds: [
-        ...currentBoard.invitedUserIds,
-        ...selectedUsers.map((user: any) => user.id),
-      ],
-    });
-    loadBoard();
-    toast("Users invited successfully!", "success");
+    try {
+      await updateBoard(currentBoard?.id || currentBoard._id, {
+        invitedUserIds: [
+          ...currentBoard.invitedUserIds,
+          ...selectedUsers.map((user: any) => user.id),
+        ],
+      });
+      loadBoard();
+      toast("Users invited successfully!", "success");
+    } catch (error) {
+      console.error("Error inviting users:", error);
+      toast("Failed to invite users. Please try again.", "error");
+      throw new Error("Failed to invite users");
+    }
   };
 
-  const getFilteredTasksByStatus = (status: string) => {
-    let filteredTasks = getTasksByStatus(status);
-    console.log(`Got ${filteredTasks.length} tasks for status ${status}`);
+  const getFilteredTasksByStatus = (status: string, tasks: ITask[]) => {
+    let filteredTasks = getTasksByStatus(status, tasks);
 
     // Apply search filter
     if (searchQuery.trim() !== "") {
@@ -275,10 +282,8 @@ const BoardDetail: React.FC = () => {
       ...(currentBoard.acceptedUserIds || []),
       currentBoard.adminId,
     ];
-    console.log("Member IDs:", memberIds);
     // Remove duplicates
     const uniqueMemberIds = [...new Set(memberIds)];
-    console.log("users Member", users);
     return users.filter((user) =>
       uniqueMemberIds.includes(user.id || user.userId)
     );
@@ -308,11 +313,15 @@ const BoardDetail: React.FC = () => {
       <PageContainer>
         {/* <Header /> */}
         <ErrorContainer>
-          <ErrorMessage>{error || "Board not found"}</ErrorMessage>
+          <SomethingWentWrong />
           <ActionButton
             variant="contained"
-            onClick={() => navigate("/")}
-            sx={{ bgcolor: "black", "&:hover": { bgcolor: "black" } }}
+            onClick={() => navigate("/dashboard")}
+            sx={{
+              marginTop: "10px",
+              bgcolor: "black",
+              "&:hover": { bgcolor: "black" },
+            }}
           >
             Back to Dashboard
           </ActionButton>
@@ -513,7 +522,7 @@ const BoardDetail: React.FC = () => {
                   key={column.id} // Use column ID as the key
                   title={column.name} // Use column name
                   columnId={column.id}
-                  tasks={getFilteredTasksByStatus(column.name)}
+                  tasks={getFilteredTasksByStatus(column.name, tasks)}
                   users={users}
                   boardId={boardId || ""}
                   onAddTask={handleOpenAddTaskDialog}

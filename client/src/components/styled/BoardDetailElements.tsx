@@ -1,11 +1,18 @@
-import styled from 'styled-components';
-import { Paper, Typography, Chip, CircularProgress as MuiCircularProgress, MenuItem, Button } from '@mui/material';
+import styled from "styled-components";
+import {
+  Paper,
+  Typography,
+  Chip,
+  CircularProgress as MuiCircularProgress,
+  MenuItem,
+  Button,
+} from "@mui/material";
 
 export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
 `;
 
 export const ContentContainer = styled.div`
@@ -100,7 +107,8 @@ export const FilterChip = styled(Chip)<{ $selected?: boolean }>`
     padding: 6px 12px;
     border-radius: 16px;
     transition: all 0.2s ease-in-out;
-    background: ${({ $selected }) => ($selected ? "linear-gradient(90deg, #6a11cb, #2575fc)" : "#f8f9fa")};
+    background: ${({ $selected }) =>
+      $selected ? "linear-gradient(90deg, #6a11cb, #2575fc)" : "#f8f9fa"};
     color: ${({ $selected }) => ($selected ? "white" : "#495057")};
     border: ${({ $selected }) => ($selected ? "none" : "1px solid #dee2e6")};
     cursor: pointer;
@@ -116,7 +124,6 @@ export const FilterChip = styled(Chip)<{ $selected?: boolean }>`
     color: white;
   }
 `;
-
 
 export const FilterContainer = styled(Paper)`
   margin-top: 12px;
@@ -143,7 +150,8 @@ export const AssignedFilterChip = styled(Chip)<{ $selected?: boolean }>`
     padding: 6px 12px;
     border-radius: 16px;
     transition: all 0.2s ease-in-out;
-    background: ${({ $selected }) => ($selected ? "linear-gradient(90deg, #34d399, #059669)" : "#f8f9fa")};
+    background: ${({ $selected }) =>
+      $selected ? "linear-gradient(90deg, #34d399, #059669)" : "#f8f9fa"};
     color: ${({ $selected }) => ($selected ? "white" : "#495057")};
     border: ${({ $selected }) => ($selected ? "none" : "1px solid #dee2e6")};
     cursor: pointer;
@@ -193,13 +201,12 @@ export const FilterMenuItem = styled(MenuItem)<{ $selected?: boolean }>`
     font-weight: ${({ $selected }) => ($selected ? "600" : "400")};
     background: ${({ $selected }) => ($selected ? "#e9ecef" : "transparent")};
     transition: all 0.2s ease-in-out;
-    
+
     &:hover {
       background: #e9ecef;
     }
   }
 `;
-
 
 export const CircularProgress = styled(MuiCircularProgress)`
   color: #9b87f5;
@@ -217,6 +224,10 @@ export const ErrorContainer = styled.div`
   margin: 0 auto;
   padding: 24px;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  min-height: 400px;
+  flex-direction: column;
 `;
 
 export const ErrorMessage = styled.div`
