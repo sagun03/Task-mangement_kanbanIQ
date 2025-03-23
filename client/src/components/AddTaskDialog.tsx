@@ -5,6 +5,7 @@ import {
   MenuItem,
   FormHelperText,
   Button,
+  Typography,
 } from "@mui/material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
@@ -19,9 +20,24 @@ import {
 import { useAuth } from "../context/AuthContext";
 import LoadingOverlay from "./Loader";
 
-const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus = "To Do", board }) => {
-    const { user } = useAuth();
-  const { control, handleSubmit, reset, formState: { errors }, setValue, register } = useForm({
+const AddTaskDialog = ({
+  open,
+  onClose,
+  onAddTask,
+  users,
+  boardId,
+  defaultStatus = "To Do",
+  board,
+}) => {
+  const { user } = useAuth();
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    setValue,
+    register,
+  } = useForm({
     defaultValues: {
       title: "",
       description: "",
@@ -31,6 +47,7 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
       boardOriginalId: boardId,
       assignedBy: user.id,
       createdBy: user.id,
+      dueDate: "",
     },
   });
 
@@ -44,7 +61,6 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
     reset();
     onClose();
   };
-
 
   const getUser = (userId: string) => {
     return users.find((user) => user.id === userId);
@@ -69,7 +85,12 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
           Create New Task
         </DialogTitle>
         <DialogContent sx={{ background: "white", marginTop: "20px" }}>
-          <label style={{ color: "black" }}>Task Title</label>
+          <label style={{ color: "black" }}>
+            Task Title{" "}
+            <Typography component="span" color="error">
+              *
+            </Typography>
+          </label>
           <StyledTextField
             {...register("title", { required: "Title is required" })}
             autoFocus
@@ -107,24 +128,29 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
           />
 
           <label style={{ color: "black" }}>Priority</label>
-          <FormControl fullWidth error={!!errors.priority} sx={{ borderColor: "black" }}>
+          <FormControl
+            fullWidth
+            error={!!errors.priority}
+            sx={{ borderColor: "black" }}
+          >
             <Controller
               name="priority"
               control={control}
               rules={{ required: "Priority is required" }}
               render={({ field }) => (
-                <Select {...field} sx={{
-                  backgroundColor: "white",
-                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "black"
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: 'black',
-                    borderWidth: '1.2px'
-                  }
-                  
-                 
-                }}>
+                <Select
+                  {...field}
+                  sx={{
+                    backgroundColor: "white",
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                      borderWidth: "1.2px",
+                    },
+                  }}
+                >
                   <MenuItem value="high">High</MenuItem>
                   <MenuItem value="medium">Medium</MenuItem>
                   <MenuItem value="low">Low</MenuItem>
@@ -134,9 +160,13 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
             <FormHelperText>{errors.priority?.message}</FormHelperText>
           </FormControl>
 
-          <label style={{ color: "black" }}>Due Date</label>
+          <label style={{ color: "black" }}>Due Date <Typography component="span" color="error">
+              *
+            </Typography></label>
+            <FormControl fullWidth error={!!errors.dueDate} sx={{ borderColor: "black" }}>
           <Controller
             name="dueDate"
+            rules={{ required: "Due Date is required" }}
             control={control}
             render={({ field }) => (
               <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -158,29 +188,46 @@ const AddTaskDialog = ({ open, onClose, onAddTask, users, boardId, defaultStatus
               </LocalizationProvider>
             )}
           />
+          <FormHelperText>{errors.dueDate?.message}</FormHelperText>
+        </FormControl>
 
-          <label style={{ color: "black" }}>Assign To</label>
-          <FormControl fullWidth error={!!errors.assignedTo} sx={{ borderColor: "black" }}>
+          <label style={{ color: "black" }}>
+            Assign To{" "}
+            <Typography component="span" color="error">
+              *
+            </Typography>
+          </label>
+          <FormControl
+            fullWidth
+            error={!!errors.assignedTo}
+            sx={{ borderColor: "black" }}
+          >
             <Controller
               name="assignedTo"
               control={control}
               rules={{ required: "Please assign this task to someone" }}
               render={({ field }) => (
-                <Select {...field} sx={{
-                  backgroundColor: "white",
-                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "black"
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: 'black',
-                    borderWidth: '1.2px'
-                  }
-                  
-                }}>
-                   {board?.acceptedUserIds?.map((id) => {
+                <Select
+                  {...field}
+                  sx={{
+                    backgroundColor: "white",
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "black",
+                      borderWidth: "1.2px",
+                    },
+                  }}
+                >
+                  {board?.acceptedUserIds?.map((id) => {
                     const user = getUser(id);
-                    const value = user?.name || user?.email ;
-                    return <MenuItem key={user.id} value={id}>{value}</MenuItem>;
+                    const value = user?.name || user?.email;
+                    return (
+                      <MenuItem key={user.id} value={id}>
+                        {value}
+                      </MenuItem>
+                    );
                   })}
                 </Select>
               )}

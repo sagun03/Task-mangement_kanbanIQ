@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import TaskService from "./tasks.service";
 import { parseIdsFromQuery } from "../../utils/queryUtils";
+import { wss } from "../../app";
 
 class TaskController {
   // Private static instance property
@@ -39,9 +40,6 @@ class TaskController {
     const { id } = req.params;
     try {
       const task = await this.taskService.getTaskById(id);
-      if (!task) {
-        return res.status(404).json({ message: "Task not found" });
-      }
       return res.status(200).json(task);
     } catch (error) {
       return res.status(500).json({ message: "Error fetching task by ID" });
@@ -56,11 +54,13 @@ class TaskController {
 
     // Use the utility function to parse task IDs from query string
     const idsArray = parseIdsFromQuery(ids);
-  
+
     if (idsArray.length === 0) {
-      return res.status(400).json({ message: "Invalid or missing 'ids' query parameter" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing 'ids' query parameter" });
     }
-  
+
     try {
       const tasks = await this.taskService.getTasksByIds(idsArray);
       return res.status(200).json(tasks);
@@ -74,6 +74,7 @@ class TaskController {
    */
   public async createTask(req: Request, res: Response) {
     const taskData = req.body;
+    console.log("Creating new task:", taskData);
     try {
       const newTask = await this.taskService.createNewTask(taskData);
       return res.status(201).json(newTask);
@@ -88,8 +89,13 @@ class TaskController {
   public async updateTask(req: Request, res: Response) {
     const { id } = req.params;
     const updates = req.body;
+
     try {
-      const updatedTask = await this.taskService.updateExistingTask(id, updates);
+      const updatedTask = await this.taskService.updateExistingTask(
+        id,
+        updates
+      );
+
       if (!updatedTask) {
         return res.status(404).json({ message: "Task not found" });
       }
@@ -116,34 +122,41 @@ class TaskController {
   }
 
   /**
- * Partially update a task
- */
-public async partialUpdateTask(req: Request, res: Response) {
-  const { id } = req.params;
-  const updates = req.body;
-  try {
-    const updatedTask = await this.taskService.updateTaskFields(id, updates);
-    if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-    return res.status(200).json(updatedTask);
-  } catch (error) {
-    return res.status(500).json({ message: "Error updating task" });
-  }
-}
+   * Partially update a task
+   */
+  public async partialUpdateTask(req: Request, res: Response) {
+    const { id, userId } = req.params;
+    const updates = req.body;
 
-/**
- * Get tasks by board ID
- */
-public async getTasksByBoardId(req: Request, res: Response) {
-  const { boardId } = req.params;
-  try {
-    const tasks = await this.taskService.getTasksByBoardId(boardId);
-    return res.status(200).json(tasks);
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching tasks by board ID", error });
+    try {
+      const updatedTask = await this.taskService.updateTaskFields(id, updates);
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      wss.clients.forEach((client) => {
+        client.send(JSON.stringify({ event: "partialUpdateTask", data: updatedTask, userId }));
+      });
+  
+      return res.status(200).json(updatedTask);
+    } catch (error) {
+      return res.status(500).json({ message: "Error updating task" });
+    }
   }
-}
+
+  /**
+   * Get tasks by board ID
+   */
+  public async getTasksByBoardId(req: Request, res: Response) {
+    const { boardId } = req.params;
+    try {
+      const tasks = await this.taskService.getTasksByBoardId(boardId);
+      return res.status(200).json(tasks);
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching tasks by board ID", error });
+    }
+  }
 }
 
 export default TaskController;

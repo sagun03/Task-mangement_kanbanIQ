@@ -7,36 +7,28 @@ import {
   Card,
   CardContent,
   Grid,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Paper,
-  IconButton,
-  Drawer,
-  List as MuiList,
-  ListItemIcon,
-  ListItemButton,
   createTheme,
   ThemeProvider,
   CssBaseline,
   useMediaQuery,
   Chip,
-  TextField,
-  FormControl,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { MdAdd, MdNavigateNext, MdNavigateBefore, MdSave, MdClose, MdEdit } from "react-icons/md";
+import { MdAdd, MdNavigateNext, MdNavigateBefore } from "react-icons/md";
 import "@fontsource/open-sans/600.css";
 import { useAuth } from "../context/AuthContext";
-import api from "../config/axiosInstance";
 import SkeletonLoader from "../components/SkeletonLoader";
-import { IBoard } from "../types/kanban";
-
-const drawerWidth = 280;
+import { IBoard, ITask } from "../types/kanban";
+import { useKanban } from "../context/KanbanContext";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import SomethingWentWrong from "../components/Error";
 
 const theme = createTheme({
   typography: {
@@ -44,31 +36,6 @@ const theme = createTheme({
     fontWeightRegular: 400,
   },
 });
-
-const StyledDrawer = styled(Drawer)({
-  width: drawerWidth,
-  flexShrink: 0,
-  "& .MuiDrawer-paper": {
-    width: drawerWidth,
-    boxSizing: "border-box",
-    backgroundColor: "#f8fafa",
-    boxShadow: "0px 0 6px -2px rgba(0, 0, 0, 0.1)",
-  },
-});
-
-const SearchBar = styled(Paper)(({ theme }) => ({
-  padding: "2px 4px",
-  display: "flex",
-  alignItems: "center",
-  width: "100%",
-  maxWidth: 400,
-  border: "1px solid #e0e0e0",
-  borderRadius: "8px",
-  boxShadow: "none",
-  [theme.breakpoints.down("sm")]: {
-    maxWidth: "100%",
-  },
-}));
 
 const BoardCard = styled(Card)({
   height: "100%",
@@ -86,102 +53,31 @@ const BoardCard = styled(Card)({
   },
 });
 
-const TaskColumn = styled(Paper)(({ theme }) => ({
-  padding: 16,
-  borderRadius: 8,
-  height: "96%",
-  [theme.breakpoints.down("sm")]: {
-    marginBottom: theme.spacing(2),
-  },
-}));
-
-const StyledButton = styled(Button)(({ variant }) => ({
-  textTransform: "none",
-  px: 3,
-  py: 1.5,
-  borderRadius: 2,
-  ...(variant === "contained"
-    ? {
-        backgroundColor: "#0e182b",
-        color: "white",
-        "&:hover": {
-          backgroundColor: "#1a2537",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        },
-      }
-    : {
-        color: "#0e182b",
-        borderColor: "#0e182b",
-        "&:hover": {
-          borderColor: "#0e182b",
-          backgroundColor: "rgba(14, 24, 43, 0.04)",
-        },
-      }),
-}));
-
-interface Board {
-  id: string;
-  name: string;
-  adminId: string;
-  invitedUserIds: string[];
-  columnNames: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Update the Task interface
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  dueDate: string;
-  priority: string;
-  boardOriginalId: string;
-  createdBy: string;
-}
-
-interface ActivityItem {
-  id: string;
-  user: string;
-  action: string;
-  target: string;
-  timestamp: string;
-}
-
 export default function Dashboard() {
-  const [boards, setBoards] = useState<Board[]>([]);
+  const [boards, setBoards] = useState<IBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [columns, setColumns] = useState<string[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
+  const [tasksError, setTasksError] = useState<string>("");
   const [tasksLoading, setTasksLoading] = useState(true);
-  const [tasksError, setTasksError] = useState("");
+  const { boards, getTasksByUserId, error: dataError } = useKanban();
 
   useEffect(() => {
-    const fetchBoards = async () => {
-      try {
-        const response = await api.get("/boards");
-        if (Array.isArray(response.data)) {
-          // Filter boards where adminId matches user's uid
-          const userBoards = response.data.filter(
-            (board) => board.adminId === user?.id || board.acceptedUserIds.includes(user?.id)
-          );
-          setBoards(userBoards);
-          setColumns(userBoards.map((board) => board.columnNames).flat());
-          console.log(boards, columns);
-        } else {
-          setError("Invalid response format");
-        }
-      } catch (error) {
-        console.error("Error fetching boards:", error);
-        setError("Failed to fetch boards");
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (dataError) {
+      setError(dataError);
+    }
+  }, [dataError]);
+
+  useEffect(() => {
+    const userBoards = boards.filter(
+      (board) =>
+        board.adminId === user?.id || board?.acceptedUserIds?.includes(user?.id)
+    );
+    setMyBoards(userBoards);
+    setLoading(false);
+  }, [boards]);
 
     const fetchTasks = async () => {
       try {
@@ -207,81 +103,13 @@ export default function Dashboard() {
     }
   }, [user?.userId]);
 
-  // Add these handler functions in your component
-  const handleStartEdit = (task: Task) => {
-    setEditingTask(task);
-    setEditedTitle(task.title);
-    setEditedPriority(task.priority);
-  };
-  
-  const handleCancelEdit = () => {
-    setEditingTask(null);
-    setEditedTitle('');
-    setEditedPriority('');
-  };
-  
-  const handleSaveEdit = async (taskId: string) => {
-    try {
-      const response = await api.put(`/tasks/${taskId}`, {
-        title: editedTitle,
-        priority: editedPriority
-      });
-  
-      if (response.status === 200) {
-        // Update local state
-        setTasks(tasks.map(task => 
-          task.id === taskId 
-            ? { ...task, title: editedTitle, priority: editedPriority }
-            : task
-        ));
-        handleCancelEdit();
-      }
-    } catch (error) {
-      console.error('Error updating task:', error);
-    }
-  };
+  const uniqueStatuses = [...new Set(tasks.map((task) => task.status))];
 
-  const handleKeyDown = async (e: React.KeyboardEvent, taskId: string) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      try {
-        const response = await api.put(`/tasks/${taskId}`, {
-          title: editedTitle,
-          priority: editedPriority
-        });
-    
-        if (response.status === 200) {
-          setTasks(tasks.map(task => 
-            task.id === taskId 
-              ? { ...task, title: editedTitle, priority: editedPriority }
-              : task
-          ));
-          handleCancelEdit();
-        }
-      } catch (error) {
-        console.error('Error updating task:', error);
-      }
-    } else if (e.key === 'Escape') {
-      handleCancelEdit();
-    }
-  };
+  const taskStats = uniqueStatuses.map((status) => ({
+    status,
+    count: tasks.filter((task) => task.status === status).length,
+  }));
 
-  const activities: ActivityItem[] = [
-    {
-      id: "1",
-      user: "John",
-      action: "updated",
-      target: "Homepage Design",
-      timestamp: "2 hours ago",
-    },
-    {
-      id: "2",
-      user: "Emma",
-      action: "commented on",
-      target: "API Integration",
-      timestamp: "5 hours ago",
-    },
-  ];
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -330,25 +158,6 @@ export default function Dashboard() {
             >
               Create Board
             </Button>
-            {/* <Button
-              variant="outlined"
-              sx={{
-                color: "#0e182b",
-                borderColor: "#0e182b",
-                textTransform: "none",
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                "&:hover": {
-                  borderColor: "#0e182b",
-                  bgcolor: "rgba(14, 24, 43, 0.04)",
-                },
-              }}
-              startIcon={<MdAdd />}
-              onClick={() => navigate("/createtask")}
-            >
-              Add Task
-            </Button> */}
           </Box>
 
           <Typography
@@ -374,8 +183,24 @@ export default function Dashboard() {
               ))}
             </Box>
           ) : error ? (
-            <Typography color="error">{error}</Typography>
-          ) : boards.length === 0 ? (
+            <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              py: 4,
+              px: 3,
+              bgcolor: "white",
+              borderRadius: 2,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              mb: 4,
+              textAlign: "center",
+            }}
+          >
+            <SomethingWentWrong />
+            </Box>
+          ) : myBoards.length === 0 ? (
             <Grid container justifyContent="center">
               <Grid item xs={12} md={6}>
                 <Box
@@ -394,7 +219,7 @@ export default function Dashboard() {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: "#666" }}>
-                    No boards found
+                    No myBoards found
                   </Typography>
                   <Typography variant="body2" sx={{ color: "#888" }}>
                     Create a new board to get started with your projects
@@ -404,7 +229,7 @@ export default function Dashboard() {
             </Grid>
           ) : (
             <Grid container spacing={4} sx={{ mb: 4 }}>
-              {boards
+              {myBoards
                 .sort(
                   (a, b) =>
                     new Date(b.createdAt).getTime() -
@@ -503,107 +328,63 @@ export default function Dashboard() {
                               mb: 2,
                               border: "1px solid rgba(0,0,0,0.1)",
                               boxShadow: "none",
-                              position: "relative",
                               "&:hover": {
                                 boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-                                "& .edit-actions": {
-                                  opacity: 1,
-                                },
                               },
                             }}
                           >
                             <CardContent sx={{ p: 2 }}>
-                              {editingTask?.id === task.id ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                  <TextField
-                                    fullWidth
-                                    value={editedTitle}
-                                    onChange={(e) => setEditedTitle(e.target.value)}
-                                    onKeyDown={(e) => handleKeyDown(e, task.id)}
+                              <Typography
+                                sx={{
+                                  color: "#0e182b",
+                                  fontWeight: 500,
+                                  mb: 1,
+                                }}
+                              >
+                                {task.title}
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "#666666" }}
+                                >
+                                  Due:{" "}
+                                  {new Date(task.dueDate).toLocaleDateString()}
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Chip
+                                    label={task.priority}
                                     size="small"
-                                    autoFocus
-                                  />
-                                  <FormControl size="small" fullWidth>
-                                    <Select
-                                      value={editedPriority}
-                                      onChange={(e) => setEditedPriority(e.target.value)}
-                                      onKeyDown={(e) => handleKeyDown(e, task.id)}
-                                    >
-                                      <MenuItem value="high">High</MenuItem>
-                                      <MenuItem value="medium">Medium</MenuItem>
-                                      <MenuItem value="low">Low</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                  <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-                                    Press Enter to save or Escape to cancel
-                                  </Typography>
-                                </Box>
-                              ) : (
-                                <>
-                                  <Typography
                                     sx={{
-                                      color: "#0e182b",
+                                      bgcolor:
+                                        task.priority === "high"
+                                          ? "#fee2e2"
+                                          : task.priority === "medium"
+                                          ? "#fef3c7"
+                                          : "#ecfdf5",
+                                      color:
+                                        task.priority === "high"
+                                          ? "#dc2626"
+                                          : task.priority === "medium"
+                                          ? "#d97706"
+                                          : "#059669",
                                       fontWeight: 500,
-                                      mb: 1,
+                                      fontSize: "0.75rem",
                                     }}
-                                  >
-                                    {task.title}
-                                  </Typography>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <Typography variant="caption" sx={{ color: "#666666" }}>
-                                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                                    </Typography>
-                                    <Box sx={{ display: "flex", gap: 1 }}>
-                                      <Chip
-                                        label={task.priority}
-                                        size="small"
-                                        sx={{
-                                          bgcolor:
-                                            task.priority === "high"
-                                              ? "#fee2e2"
-                                              : task.priority === "medium"
-                                              ? "#fef3c7"
-                                              : "#ecfdf5",
-                                          color:
-                                            task.priority === "high"
-                                              ? "#dc2626"
-                                              : task.priority === "medium"
-                                              ? "#d97706"
-                                              : "#059669",
-                                          fontWeight: 500,
-                                          fontSize: "0.75rem",
-                                        }}
-                                      />
-                                    </Box>
-                                  </Box>
-                                  <Box
-                                    className="edit-actions"
-                                    sx={{
-                                      position: 'absolute',
-                                      top: 8,
-                                      right: 8,
-                                      opacity: 0,
-                                      transition: 'opacity 0.2s',
-                                      display: 'flex',
-                                      gap: 0.5,
-                                    }}
-                                  >
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => handleStartEdit(task)}
-                                      sx={{ color: '#666666' }}
-                                    >
-                                      <MdEdit />
-                                    </IconButton>
-                                  </Box>
-                                </>
-                              )}
+                                  />
+                                </Box>
+                              </Box>
                             </CardContent>
                           </Card>
                         ))}
@@ -621,60 +402,23 @@ export default function Dashboard() {
                   <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
                     Recent Activity
                   </Typography>
-                  <List>
-                    {activities.map((activity) => (
-                      <ListItem key={activity.id}>
-                        <ListItemAvatar>
-                          <Avatar>{activity.user[0]}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={`${activity.user} ${activity.action} "${activity.target}"`}
-                          secondary={activity.timestamp}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      mt: 2,
-                    }}
-                  >
-                    <IconButton>
-                      <MdNavigateBefore style={{ color: "#0e182b" }} />
-                    </IconButton>
-                    <Typography sx={{ mx: 2, color: "#0e182b" }}>
-                      6 / 8
-                    </Typography>
-                    <IconButton>
-                      <MdNavigateNext style={{ color: "#0e182b" }} />
-                    </IconButton>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" sx={{ mb: 2, color: "#0e182b" }}>
-                    Productivity Insights
+                ) : tasksError ? (
+                  <SomethingWentWrong />
+                ) : taskStats.length === 0 ? (
+                  <Typography variant="body1" sx={{ color: "#666" }}>
+                    No tasks available.
                   </Typography>
-                  <Box
-                    sx={{
-                      height: 200,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      bgcolor: "#f8fafa",
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Typography color="#0e182b">Productivity Graph</Typography>
-                  </Box>
-                </CardContent>
-              </Card>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={taskStats}>
+                      <XAxis dataKey="status" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#0e182b" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </Box>

@@ -1,5 +1,4 @@
-import BoardInvitationService from "../boardInvitation/boardInvitation.service";
-import EmailService from "../email/email.service";
+import tasksModel from "../tasks/tasks.model";
 import { UserService } from "../user/user.service";
 import Board, { IBoard } from "./boards.model";
 import TaskService from "../tasks/tasks.service"; // Fixed import
@@ -115,10 +114,15 @@ class BoardService {
         return null;
       }
 
-      // Remove board from users' associations
-      await this.userService.removeBoardFromUser(deletedBoard.adminId, id);
-      for (const userId of deletedBoard.invitedUserIds) {
-        await this.userService.removeBoardFromUser(userId, id);
+      if (deletedBoard) {
+        // 🔥 Call UserService to remove the board ID from the admin and invited users
+        await this.userService.removeBoardFromUser(deletedBoard.adminId, id);
+
+        for (const userId of deletedBoard.invitedUserIds) {
+          await this.userService.removeBoardFromUser(userId, id);
+        }
+
+        await tasksModel.deleteMany({ boardOriginalId: deletedBoard.id });
       }
 
       return deletedBoard;
@@ -146,20 +150,27 @@ class BoardService {
 
   async partialUpdateBoard(id: string, updateData: Partial<IBoard>) {
     try {
-      const updatedBoard = await Board.findByIdAndUpdate(id, updateData, { new: true });
-      if (updatedBoard && updateData.invitedUserIds
-        && updateData.invitedUserIds.length > 0
+      const updatedBoard = await Board.findByIdAndUpdate(id, updateData, {
+        new: true,
+      });
+      if (
+        updatedBoard &&
+        updateData.invitedUserIds &&
+        updateData.invitedUserIds.length > 0
       ) {
-         // Lazy load BoardInvitationService
-      const { default: BoardInvitationService } = await import(
-        "../boardInvitation/boardInvitation.service"
-      );
-      const boardInvitationService = new BoardInvitationService();
-      // Send invitations to invited users
-      for (const userId of updatedBoard.invitedUserIds) {
-        // Delegate invitation logic to BoardInvitationService
-        await boardInvitationService.createInvitation(updatedBoard.id, userId);
-      }
+        // Lazy load BoardInvitationService
+        const { default: BoardInvitationService } = await import(
+          "../boardInvitation/boardInvitation.service"
+        );
+        const boardInvitationService = new BoardInvitationService();
+        // Send invitations to invited users
+        for (const userId of updatedBoard.invitedUserIds) {
+          // Delegate invitation logic to BoardInvitationService
+          await boardInvitationService.createInvitation(
+            updatedBoard.id,
+            userId
+          );
+        }
       }
       if (!updatedBoard) {
         return null;

@@ -19,23 +19,16 @@ import {
   InputLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { MdAdd, MdArrowBack, MdDelete } from 'react-icons/md';
+import { MdAdd, MdArrowBack, MdDelete, MdEdit } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import api from '../config/axiosInstance';
 import { styled } from '@mui/system';
 import "@fontsource/open-sans/600.css";
+import { useKanban } from '../context/KanbanContext';
+import { ITask } from '../types/kanban';
+import SomethingWentWrong from '../components/Error';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  dueDate: string;
-  priority: string;
-  boardOriginalId: string;
-}
-
-// Add a type for valid status values
+// Use ITask interface instead of Task interface
 type TaskStatus = 'To Do' | 'In Progress' | 'Completed';
 
 const STATUS_OPTIONS = ['To Do', 'In Progress', 'Completed'];
@@ -94,7 +87,12 @@ const MyTasks: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<ITask | null>(null);
+  const [editingTask, setEditingTask] = useState<ITask | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [editedStatus, setEditedStatus] = useState('');
+  const [editedPriority, setEditedPriority] = useState('');
   const navigate = useNavigate();
   const { getTasksByUserId } = useKanban();
   const { user } = useAuth();
@@ -128,7 +126,7 @@ const MyTasks: React.FC = () => {
   };
 
   // Add handler functions for editing
-  const handleStartEdit = (task: Task) => {
+  const handleStartEdit = (task: ITask) => {
     setEditingTask(task);
     setEditedTitle(task.title);
     setEditedDescription(task.description);
@@ -229,9 +227,7 @@ const MyTasks: React.FC = () => {
           alignItems: 'center', 
           minHeight: '400px' 
         }}>
-          <Typography color="error" sx={{ fontSize: '1.1rem' }}>
-            {error}
-          </Typography>
+          <SomethingWentWrong />
         </Box>
       ) : tasks.length === 0 ? (
         <Box
@@ -277,24 +273,23 @@ const MyTasks: React.FC = () => {
               maxWidth: '400px'
             }}
           >
-            Create your first task to start tracking your work
+            No Tasks is assigned to you yet. Create a new task to get started.
           </Typography>
         </Box>
       ) : (
         <Grid container spacing={3}>
           {tasks.map((task) => (
-            <Grid item xs={12} sm={6} md={4} key={task.id}>
-<<<<<<< HEAD
+            <Grid item xs={12} sm={6} md={4} key={task.id || task._id}>
               <TaskCard>
                 <EditButton
-                  onClick={() => handleStartEdit(task)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartEdit(task);
+                  }}
                   aria-label="edit"
                 >
                   <MdEdit />
                 </EditButton>
-=======
-              <TaskCard onClick={() => navigate(`/kanban-board/tasks/${task.id}`)}>
->>>>>>> 809f8b32e89f317cb5517c445ca024250cfef6e8
                 <DeleteButton
                   onClick={(e) => {
                     e.stopPropagation();
@@ -305,7 +300,16 @@ const MyTasks: React.FC = () => {
                 >
                   <MdDelete />
                 </DeleteButton>
-                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
+                <CardContent 
+                  onClick={() => navigate(`/kanban-board/tasks/${task.id || task._id}`)}
+                  sx={{ 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    p: 3,
+                    cursor: 'pointer'
+                  }}
+                >
                   <Box sx={{ mb: 2 }}>
                     <Chip
                       label={task.status}

@@ -288,7 +288,7 @@ router.get("/fetchByBoardId/:boardId", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.patch("/:id", async (req, res) => {
+router.patch("/:id/:userId", async (req, res) => {
   await taskController.partialUpdateTask(req, res);
 });
 

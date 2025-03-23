@@ -1,4 +1,4 @@
-import app from "./app";
+import { server } from "./app";
 import connectDB from "./config/database.config";
 
 const PORT = process.env.PORT || 8082;
@@ -9,7 +9,7 @@ const startServer = async () => {
     await connectDB();
     
     // Start server
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
       console.log('API endpoints available at /api/*');
     });

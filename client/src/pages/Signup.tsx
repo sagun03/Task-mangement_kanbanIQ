@@ -9,7 +9,6 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
-  CircularProgress,
 } from "@mui/material";
 import {
   Wrapper,
@@ -26,6 +25,7 @@ import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useToast } from "../context/ToastProvider";
 import PersonIcon from "@mui/icons-material/Person";
 import LoadingOverlay from "../components/Loader";
+import DOMPurify from 'dompurify';
 
 interface SignupFormInputs {
   email: string;
@@ -63,7 +63,11 @@ const Signup: React.FC = () => {
       showToast("Signup successful! Redirecting...", "success");
       navigate("/login");
     } catch (err: unknown) {
-      showToast((err as Record<string, string>).message || "Signup failed. Please try again.", "error");
+      showToast(
+        (err as Record<string, string>).message ||
+          "Signup failed. Please try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,11 @@ const Signup: React.FC = () => {
       <Container>
         <FormBox>
           <TabContainer>
-            <Tab as={Link} to="/login" style={{ textDecoration: "none", color: "black" }}>
+            <Tab
+              as={Link}
+              to="/login"
+              style={{ textDecoration: "none", color: "black" }}
+            >
               Login
             </Tab>
             <Tab active>Sign Up</Tab>
@@ -84,9 +92,26 @@ const Signup: React.FC = () => {
           {error && <ErrorText>{error}</ErrorText>}
 
           <form onSubmit={handleSubmit(onSubmit)} style={{ width: "100%" }}>
-            <Box style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Box
+              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            >
               <StyledTextField
-                placeholder="Email"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label={
+                  <>
+                    Email <span style={{ color: "red" }}>*</span>
+                  </>
+                }
                 fullWidth
                 {...register("email", {
                   required: "Email is required",
@@ -108,8 +133,24 @@ const Signup: React.FC = () => {
 
               <StyledTextField
                 fullWidth
-                placeholder="Name"
-                {...register("name")}
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label="Name"
+                {...register("name", {
+                  validate: (value) => {
+                    const cleanValue = DOMPurify.sanitize(value); // Sanitize input
+                    return cleanValue === value || "Invalid characters detected!";
+                  },
+                })}
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 InputProps={{
@@ -123,7 +164,22 @@ const Signup: React.FC = () => {
 
               <StyledTextField
                 fullWidth
-                placeholder="Password"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label={
+                  <>
+                    Password <span style={{ color: "red" }}>*</span>
+                  </>
+                }
                 type={showPassword ? "text" : "password"}
                 {...register("password", {
                   required: "Password is required",
@@ -133,7 +189,8 @@ const Signup: React.FC = () => {
                   },
                   pattern: {
                     value: /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])/,
-                    message: "Must have 1 uppercase, 1 number, 1 special character",
+                    message:
+                      "Must have 1 uppercase, 1 number, 1 special character",
                   },
                 })}
                 error={!!errors.password}
@@ -146,7 +203,9 @@ const Signup: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
                         {showPassword ? <HiEyeOff /> : <HiEye />}
                       </IconButton>
                     </InputAdornment>
@@ -156,11 +215,27 @@ const Signup: React.FC = () => {
 
               <StyledTextField
                 fullWidth
-                placeholder="Confirm Password"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiFormLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#ced4da" },
+                    "&:hover fieldset": { borderColor: "black" },
+                    "&.Mui-focused fieldset": { borderColor: "black" },
+                  },
+                }}
+                label={
+                  <>
+                    Confirm Password <span style={{ color: "red" }}>*</span>
+                  </>
+                }
                 type={showConfirmPassword ? "text" : "password"}
                 {...register("confirmPassword", {
                   required: "Confirm Password is required",
-                  validate: (value) => value === watch("password") || "Passwords do not match",
+                  validate: (value) =>
+                    value === watch("password") || "Passwords do not match",
                 })}
                 error={!!errors.confirmPassword}
                 helperText={errors.confirmPassword?.message}
@@ -172,7 +247,11 @@ const Signup: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      <IconButton
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
                         {showConfirmPassword ? <HiEyeOff /> : <HiEye />}
                       </IconButton>
                     </InputAdornment>
@@ -181,10 +260,19 @@ const Signup: React.FC = () => {
               />
             </Box>
 
-            <FormControlLabel control={<Checkbox />} style={{ margin: "10px" }} label="I agree to the Terms & Conditions" />
+            <FormControlLabel
+              control={<Checkbox />}
+              style={{ margin: "10px" }}
+              label="I agree to the Terms & Conditions"
+            />
 
-            <SubmitButton variant="contained" style={{ background: "black" }} type="submit" disabled={loading}>
-            Sign Up
+            <SubmitButton
+              variant="contained"
+              style={{ background: "black" }}
+              type="submit"
+              disabled={loading}
+            >
+              Sign Up
             </SubmitButton>
           </form>
         </FormBox>
