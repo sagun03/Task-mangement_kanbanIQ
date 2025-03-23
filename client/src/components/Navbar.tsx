@@ -371,12 +371,6 @@ const Navbar = ({ isSideBar = true }) => {
                   open={Boolean(anchorEl)}
                   onClose={handleMenuClose}
                 >
-                  <MenuItem onClick={() => navigate("/profile")}>
-                    Profile
-                  </MenuItem>
-                  <MenuItem onClick={() => navigate("/settings")}>
-                    Settings
-                  </MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
               </Box>
