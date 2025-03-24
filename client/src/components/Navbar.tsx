@@ -375,7 +375,7 @@ const Navbar = ({ isSideBar = true }) => {
                 </Menu>
               </Box>
             )}
-            {!isAuthenticated && (
+            {/* {!isAuthenticated && (
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
@@ -397,7 +397,7 @@ const Navbar = ({ isSideBar = true }) => {
                   Contact
                 </Button>
               </Box>
-            )}
+            )} */}
 
             {/* Unauthenticated View */}
             {!isAuthenticated && (
