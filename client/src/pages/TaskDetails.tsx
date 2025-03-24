@@ -323,7 +323,7 @@ const TaskDetail: React.FC = () => {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              navigate("/");
+              navigate("/dashboard");
             }}
           >
             Boards
