@@ -371,17 +371,11 @@ const Navbar = ({ isSideBar = true }) => {
                   open={Boolean(anchorEl)}
                   onClose={handleMenuClose}
                 >
-                  <MenuItem onClick={() => navigate("/profile")}>
-                    Profile
-                  </MenuItem>
-                  <MenuItem onClick={() => navigate("/settings")}>
-                    Settings
-                  </MenuItem>
                   <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
               </Box>
             )}
-            {!isAuthenticated && (
+            {/* {!isAuthenticated && (
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
@@ -403,7 +397,7 @@ const Navbar = ({ isSideBar = true }) => {
                   Contact
                 </Button>
               </Box>
-            )}
+            )} */}
 
             {/* Unauthenticated View */}
             {!isAuthenticated && (

@@ -34,7 +34,6 @@ import {
   CircularProgress,
   LoadingContainer,
   ErrorContainer,
-  ErrorMessage,
   FilterMenuPaper,
   FilterMenuItem,
 } from "../components/styled/BoardDetailElements";
@@ -45,7 +44,6 @@ import InviteUserDialog from "../components/InviteUserDialog";
 import { useAuth } from "../context/AuthContext";
 import { ITask } from "../types/kanban";
 import SomethingWentWrong from "../components/Error";
-import { th } from "date-fns/locale";
 
 export const ActionButton = styled(MuiButton)`
   &.MuiButton-root {

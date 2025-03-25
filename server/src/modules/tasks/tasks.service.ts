@@ -2,6 +2,7 @@ import { UserService } from "../user/user.service";
 import Task, { ITask } from "./tasks.model";
 import EmailService from "../email/email.service";
 import BoardService from "../boards/boards.service";
+import { sendMessage } from "../kafka/kafkaProducer";
 
 class TaskService {
   private userService: UserService;
@@ -466,6 +467,8 @@ class TaskService {
         // Task URL for reference
         const taskUrl = `${process.env.FRONTEND_URL}/kanban-board/tasks/${id}`;
 
+        const emailEvents = [];
+
         // Notify assigned user
         if (assignedUser) {
           const emailContent = this.generateEmailTemplate(
@@ -475,12 +478,18 @@ class TaskService {
             taskUrl
           );
 
-          await this.emailService.sendEmail(
-            assignedUser.email,
-            "Task updated",
-            "",
-            emailContent
-          );
+          // await this.emailService.sendEmail(
+          //   assignedUser.email,
+          //   "Task updated",
+          //   "",
+          //   emailContent
+          // );
+          emailEvents.push({
+            to: assignedUser.email,
+            subject: "Task updated",
+            text: "",
+            html: emailContent,
+          });
         }
 
         // Notify assignedBy user (if different from assignedTo)
@@ -499,12 +508,18 @@ class TaskService {
             taskUrl
           );
 
-          await this.emailService.sendEmail(
-            assignedByUser.email,
-            "Task updated",
-            "",
-            emailContent
-          );
+          // await this.emailService.sendEmail(
+          //   assignedByUser.email,
+          //   "Task updated",
+          //   "",
+          //   emailContent
+          // );
+          emailEvents.push({
+            to: assignedByUser.email,
+            subject: "Task updated",
+            text: "",
+            html: emailContent,
+          });
         }
 
         // Notify board admin (if applicable)
@@ -520,13 +535,22 @@ class TaskService {
               taskUrl
             );
 
-            await this.emailService.sendEmail(
-              adminUser.email,
-              "Task updated",
-              "",
-              emailContent
-            );
+            // await this.emailService.sendEmail(
+            //   adminUser.email,
+            //   "Task updated",
+            //   "",
+            //   emailContent
+            // );
+            emailEvents.push({
+              to: adminUser.email,
+              subject: "Task updated",
+              text: "",
+              html: emailContent,
+            });
           }
+        }
+        for (const email of emailEvents) {
+          await sendMessage(email);
         }
       }
 
