@@ -311,7 +311,7 @@ const LandingPage = () => {
                 fontWeight="bold" 
                 gutterBottom
                 sx={{
-                  fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" } // Responsive font size
+                  fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" }
                 }}
               >
                 Powerful Features
