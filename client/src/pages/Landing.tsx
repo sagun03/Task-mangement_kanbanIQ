@@ -19,23 +19,29 @@ const HeroSection = styled(Box)`
   position: relative;
   background: linear-gradient(to top right, #f0f4fa, #ffffff);
   text-align: left;
-  min-height: 80vh;
+  min-height: 90vh; // Increased for better spacing
   display: flex;
+  align-items: center; // Center vertically
+  padding: 2rem 0; // Add padding top/bottom
 `;
 const KanbanCard = styled(Box)`
   position: relative;
-  width: 100%;
-  height: 380px; /* Increased height */
-  aspect-ratio: 16 / 9;
+  width: 450px; // Fixed width
+  height: 320px; // Fixed height
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
   overflow: hidden;
-  border-radius: 8px; /* Slightly larger border-radius */
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
-    rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
-  border: 1px solid #ccc; /* Softer border */
-  background: linear-gradient(to top right, rgba(0, 0, 255, 0.05), #fff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  @media (max-width: 900px) {
+    display: none; // Hide on mobile devices
+  }
 `;
 const Overlay = styled(Box)`
   position: absolute;
@@ -45,17 +51,21 @@ background: linear-gradient(to top right, rgba(32, 150, 243, 0.2), #ffffff);
 
 const AssistantCard = styled(Box)`
   position: absolute;
-  bottom: -24px;
-  right: -24px;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-  border: 1px solid #ddd;
-  background: #fff;
+  bottom: -16px;
+  right: -16px;
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: #ffffff;
   display: flex;
   align-items: center;
-  transition: all 0.3s ease-in-out;
-  gap: 12px;
+  gap: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  
+  @media (max-width: 900px) {
+    display: none; // Hide on mobile devices
+  }
 `;
 
 const AiBadge = styled(Box)`
@@ -75,7 +85,7 @@ const fadeInScale = {
 };
 
 const Section = styled(Box)({
-  padding: "6rem",
+  padding: { xs: "3rem", md: "6rem" }, // Responsive padding
   backgroundColor: "#F5F8FA",
   minHeight: "80vh",
 });
@@ -83,7 +93,8 @@ const Section = styled(Box)({
 const FeatureCard = styled(Box)({
   padding: "1.5rem",
   backgroundColor: "#fff",
-  width: "450px",
+  width: "100%", // Changed from fixed 450px
+  maxWidth: "450px", // Added maxWidth
   borderRadius: "20px",
   minHeight: "150px",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
@@ -104,6 +115,12 @@ const FeatureIcon = styled(Box)({
   backgroundColor: "rgba(33, 150, 243, 0.1)", // Adjust to match your primary color
   color: "#2196F3", // Adjust to match primary
 });
+
+const ContentContainer = styled(Container)`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+`;
 
 const features = [
   {
@@ -148,180 +165,229 @@ const fadeIn = {
 const LandingPage = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <Box display="flex" flexDirection="column" mt={"64px"} minHeight="100vh">
+    <Box display="flex" flexDirection="column" minHeight="100vh">
       <main style={{ flex: 1 }}>
-        {/* Hero Section */}
         <HeroSection>
-          {/* <Container> */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "auto",
-              px: ".6rem",
-              maxWidth: "1500px",
-              gap: 10, // Replacing Grid spacing
-            }}
-          >
-            {/* Left Section */}
-            <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeIn}
-                custom={0}
-              >
-                <Typography variant="h2" fontWeight="bold" gutterBottom>
-                  Organize your tasks with elegance
-                </Typography>
-                <Typography variant="h5" color="textSecondary">
-                  A beautiful Kanban board with AI assistance to help you manage
-                  your workflow.
-                </Typography>
-
-                <Box
-                  mt={4}
-                  display="flex"
-                  gap={2}
-                  justifyContent={{ xs: "center", md: "flex-start" }}
-                >
-                  <MUIButton
-                    variant="contained"
-                    size="large"
-                    sx={{
-                      background: "black",
-                      borderRadius: 2,
-                      color: "white",
-                    }}
-                    component={Link}
-                    to={isAuthenticated ? "/dashboard" : "/login"}
-                    endIcon={<ArrowRight size={20} />}
-                  >
-                    Get Started
-                  </MUIButton>
-                  {!isAuthenticated && (
-                    <MUIButton
-                      variant="outlined"
-                      size="large"
-                      sx={{ color: "black" }}
-                      component={Link}
-                      to="/login"
-                    >
-                      Log in
-                    </MUIButton>
-                  )}
-                </Box>
-              </motion.div>
-            </Box>
-
-            {/* Right Section */}
+          <ContentContainer>
             <Box
               sx={{
-                flex: 1,
                 display: "flex",
-                justifyContent: "center",
-                position: "relative",
+                flexDirection: { xs: "column", md: "row" },
+                alignItems: "center",
+                gap: { xs: 6, md: 10 },
+                py: { xs: 4, md: 8 }
               }}
             >
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeInScale}
+              {/* Left Section */}
+              <Box 
+                sx={{ 
+                  flex: 1,
+                  maxWidth: { xs: '100%', md: '45%' },
+                  textAlign: { xs: "center", md: "left" },
+                }}
               >
-                {/* Kanban Card */}
-                <KanbanCard >
-                  <Overlay />
-                  <Typography
-                    variant="h5"
-                    color="textSecondary"
-                    fontWeight="500"
-                  >
-                    Interactive Kanban Board
-                  </Typography>
-                </KanbanCard>
-
-                {/* AI Assistant Card */}
-                <AssistantCard
-                
-                  // sx={{ position: "absolute", bottom: -20, right: -20 }}
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={fadeIn}
+                  custom={0}
                 >
-                  <AiBadge>AI</AiBadge>
-                  <Box>
-                    <Typography variant="body2" fontWeight="600">
-                      AI Assistant
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      Ask me anything about your tasks
-                    </Typography>
-                  </Box>
-                </AssistantCard>
-              </motion.div>
-            </Box>
-          </Box>
+                  <Typography 
+                    variant="h1" 
+                    fontWeight="bold"
+                    sx={{
+                      fontSize: { xs: "2.5rem", sm: "3rem", md: "3.5rem" },
+                      lineHeight: { xs: 1.2, md: 1.1 },
+                      mb: 3
+                    }}
+                  >
+                    Organize your tasks with elegance
+                  </Typography>
+                  <Typography 
+                    variant="h5" 
+                    color="textSecondary"
+                    sx={{
+                      fontSize: { xs: "1.1rem", sm: "1.25rem" } // Responsive font size
+                    }}
+                  >
+                    A beautiful Kanban board with AI assistance to help you manage
+                    your workflow.
+                  </Typography>
 
-          {/* </Container> */}
+                  <Box
+                    mt={4}
+                    display="flex"
+                    gap={2}
+                    justifyContent={{ xs: "center", md: "flex-start" }}
+                  >
+                    <MUIButton
+                      variant="contained"
+                      size="large"
+                      sx={{
+                        background: "black",
+                        borderRadius: 2,
+                        color: "white",
+                      }}
+                      component={Link}
+                      to={isAuthenticated ? "/dashboard" : "/login"}
+                      endIcon={<ArrowRight size={20} />}
+                    >
+                      Get Started
+                    </MUIButton>
+                    {!isAuthenticated && (
+                      <MUIButton
+                        variant="outlined"
+                        size="large"
+                        sx={{ color: "black" }}
+                        component={Link}
+                        to="/login"
+                      >
+                        Log in
+                      </MUIButton>
+                    )}
+                  </Box>
+                </motion.div>
+              </Box>
+
+              {/* Right Section */}
+              <Box
+                sx={{
+                  flex: "none", // Remove flex scaling
+                  width: "450px", // Fixed width
+                  position: "relative",
+                  display: { xs: "none", md: "block" }, // Hide on mobile, show on desktop
+                  mx: "auto" // Center the box
+                }}
+              >
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={fadeInScale}
+                >
+                  {/* Kanban Card */}
+                  <KanbanCard>
+                    <Overlay />
+                    <Typography
+                      variant="h5"
+                      color="textSecondary"
+                      fontWeight="500"
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '100%',
+                        textAlign: 'center'
+                      }}
+                    >
+                      Interactive Kanban Board
+                    </Typography>
+                  </KanbanCard>
+
+                  {/* AI Assistant Card */}
+                  <AssistantCard>
+                    <AiBadge>AI</AiBadge>
+                    <Box>
+                      <Typography variant="body2" fontWeight="600">
+                        AI Assistant
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        Ask me anything about your tasks
+                      </Typography>
+                    </Box>
+                  </AssistantCard>
+                </motion.div>
+              </Box>
+            </Box>
+          </ContentContainer>
         </HeroSection>
 
         {/* Features Section */}
         <Section>
-          {/* <Container> */}
-          <Box textAlign="center" mb={6}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Powerful Features
-            </Typography>
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              maxWidth="600px"
-              margin="auto"
-            >
-              Everything you need to organize your tasks and boost productivity
-            </Typography>
-          </Box>
+          <ContentContainer>
+            <Box textAlign="center" mb={6}>
+              <Typography 
+                variant="h4" 
+                fontWeight="bold" 
+                gutterBottom
+                sx={{
+                  fontSize: { xs: "1.75rem", sm: "2rem", md: "2.25rem" } // Responsive font size
+                }}
+              >
+                Powerful Features
+              </Typography>
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                maxWidth="600px"
+                margin="auto"
+              >
+                Everything you need to organize your tasks and boost productivity
+              </Typography>
+            </Box>
 
-          <Grid container spacing={8}>
-            {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-100px" }}
-                  variants={fadeIn}
-                  custom={index * 0.2}
-                >
-                  <FeatureCard>
-                    <Box display="flex" alignItems="center" gap={2} mb={2}>
-                      <FeatureIcon>
-                        <CheckCircle fontSize="small" />
-                      </FeatureIcon>
-                      <Typography style={{ fontWeight: 550 }} variant="h6">
-                        {feature.title}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      style={{ textAlign: "left" }}
-                      color="text.secondary"
+            <Grid container spacing={{ xs: 3, sm: 4, md: 5 }}>
+              {features.map((feature, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeIn}
+                    custom={index * 0.2}
+                  >
+                    <FeatureCard
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
                     >
-                      {feature.description}
-                    </Typography>
-                  </FeatureCard>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-          {/* </Container> */}
+                      <Box display="flex" alignItems="center" gap={2} mb={2}>
+                        <FeatureIcon>
+                          <CheckCircle fontSize="small" />
+                        </FeatureIcon>
+                        <Typography style={{ fontWeight: 550 }} variant="h6">
+                          {feature.title}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        style={{ textAlign: "left" }}
+                        color="text.secondary"
+                      >
+                        {feature.description}
+                      </Typography>
+                    </FeatureCard>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </ContentContainer>
         </Section>
 
         {/* CTA Section */}
-        <Box py={10} height={"50vh"} sx={{ display: "flex" }}>
-          <Container>
+        <Box 
+          py={{ xs: 5, md: 10 }} 
+          height={{ xs: "auto", md: "50vh" }} 
+          sx={{ display: "flex" }}
+        >
+          <Container maxWidth="lg">
             <Paper
               elevation={3}
-              sx={{ p: 6, textAlign: "center", borderRadius: 3 }}
+              sx={{ 
+                p: { xs: 3, md: 6 }, // Responsive padding
+                textAlign: "center", 
+                borderRadius: 3 
+              }}
             >
-              <Typography variant="h3" fontWeight="bold" gutterBottom>
+              <Typography 
+                variant="h3" 
+                fontWeight="bold" 
+                gutterBottom
+                sx={{
+                  fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" } // Responsive font size
+                }}
+              >
                 Ready to get organized?
               </Typography>
               <Typography variant="h6" color="textSecondary" mb={4}>
@@ -347,8 +413,10 @@ const LandingPage = () => {
         <Container>
           <Box
             display="flex"
+            flexDirection={{ xs: "column", sm: "row" }} // Stack on mobile
             justifyContent="space-between"
             alignItems="center"
+            gap={{ xs: 2, sm: 0 }} // Add gap for stacked layout
           >
             <Box display="flex" alignItems="center">
               <FaLayerGroup style={{ marginRight: "10px" }} />
