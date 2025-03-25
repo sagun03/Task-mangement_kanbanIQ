@@ -375,7 +375,7 @@ const LandingPage = () => {
             <Paper
               elevation={3}
               sx={{ 
-                p: { xs: 3, md: 6 }, // Responsive padding
+                p: { xs: 3, md: 6 },
                 textAlign: "center", 
                 borderRadius: 3 
               }}
