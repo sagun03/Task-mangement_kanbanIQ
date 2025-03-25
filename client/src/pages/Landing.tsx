@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { FaLayerGroup } from "react-icons/fa";
 
 // Styled components for Material-UI
+
 const HeroSection = styled(Box)`
   position: relative;
   background: linear-gradient(to top right, #f0f4fa, #ffffff);
@@ -24,6 +25,7 @@ const HeroSection = styled(Box)`
   align-items: center; // Center vertically
   padding: 2rem 0; // Add padding top/bottom
 `;
+
 const KanbanCard = styled(Box)`
   position: relative;
   width: 450px; // Fixed width
@@ -43,6 +45,7 @@ const KanbanCard = styled(Box)`
     display: none; // Hide on mobile devices
   }
 `;
+
 const Overlay = styled(Box)`
   position: absolute;
   inset: 0;
@@ -67,7 +70,6 @@ const AssistantCard = styled(Box)`
     display: none; // Hide on mobile devices
   }
 `;
-
 const AiBadge = styled(Box)`
   width: 40px;
   height: 40px;
@@ -84,11 +86,15 @@ const fadeInScale = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay: 0.3 } },
 };
 
-const Section = styled(Box)({
-  padding: { xs: "3rem", md: "6rem" }, // Responsive padding
-  backgroundColor: "#F5F8FA",
-  minHeight: "80vh",
-});
+const Section = styled(Box)`
+  padding: 3rem;
+  background-color: #F5F8FA;
+  min-height: 80vh;
+
+  @media (min-width: 900px) {
+    padding: 6rem;
+  }
+`;
 
 const FeatureCard = styled(Box)({
   padding: "1.5rem",
